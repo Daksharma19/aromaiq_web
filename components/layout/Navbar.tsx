@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
@@ -15,6 +16,26 @@ const navLinks = [
   // { label: "How It Works", href: "#how-it-works" },
   { label: "Our Story", href: "/our-story" },
 ];
+
+function BrandMark({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <Link
+      href="/"
+      className="flex h-9 shrink-0 items-center sm:h-10"
+      aria-label="AromaIQ home"
+      onClick={onNavigate}
+    >
+      <Image
+        src="/assets/images/logo.jpg"
+        alt="AromaIQ"
+        width={200}
+        height={200}
+        className="h-full w-auto max-w-[min(42vw,15rem)] object-contain object-left sm:max-w-[10.5rem]"
+        priority
+      />
+    </Link>
+  );
+}
 
 export default function Navbar() {
   const { user, loading, refresh, setUser } = useAuth();
@@ -65,16 +86,15 @@ export default function Navbar() {
         />
 
         <div className="relative mx-auto max-w-6xl px-4">
-          <div className="flex h-20 items-center justify-between">
-            <Link
-              href="/"
-              className="font-display text-xl tracking-widest text-ivory"
-              aria-label="AromaIQ home"
-            >
-              Aroma<span className="text-gold">IQ</span>
-            </Link>
+          <div className="relative flex h-20 items-center justify-between">
+            <div className="relative z-10 shrink-0">
+              <BrandMark />
+            </div>
 
-            <nav className="hidden items-center gap-8 md:flex">
+            <nav
+              className="absolute left-1/2 top-1/2 z-0 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 md:flex"
+              aria-label="Main"
+            >
               {navLinks.map((l) => (
                 <Link
                   key={l.label}
@@ -94,7 +114,7 @@ export default function Navbar() {
               ) : null}
             </nav>
 
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="relative z-10 flex shrink-0 items-center gap-1 sm:gap-2">
               {!loading && !user ? (
                 <>
                   <Link
@@ -194,13 +214,7 @@ export default function Navbar() {
               transition={{ duration: 0.3 }}
             >
               <div className="flex items-center justify-between py-6">
-                <Link
-                  href="/"
-                  className="font-display text-xl tracking-widest text-ivory"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Aroma<span className="text-gold">IQ</span>
-                </Link>
+                <BrandMark onNavigate={() => setMenuOpen(false)} />
 
                 <button
                   type="button"

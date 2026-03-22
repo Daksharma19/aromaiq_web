@@ -19,7 +19,7 @@ import {
 const painPoints = [
   "15 oils. No idea which to use.",
   "Wrong scent ruins the whole mood.",
-  "Timers, apps, manual switches — all friction.",
+  "Timers, apps, manual switches - all friction.",
 ];
 
 const solutionPills = [
@@ -34,12 +34,19 @@ const viewAnim = {
   margin: "-60px 0px",
 } as const;
 
-function DiffuserImage() {
+/** `imagePath` is served from `public/` (e.g. `/images/diffuser.png`). */
+function ProblemSolutionImage({
+  imagePath,
+  imageAlt,
+}: {
+  imagePath: string;
+  imageAlt: string;
+}) {
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-gold/15 bg-obsidian-light/40">
       <Image
-        src="/images/diffuser.png"
-        alt="AromaIQ smart diffuser"
+        src={imagePath}
+        alt={imageAlt}
         fill
         className="object-cover"
         sizes="(max-width: 768px) 100vw, 33vw"
@@ -134,7 +141,19 @@ function SolutionCopy() {
   );
 }
 
-export default function ProblemSolution() {
+export type ProblemSolutionProps = {
+
+  imagePath?: string;
+  imageAlt?: string;
+};
+
+const DEFAULT_IMAGE_PATH = "/images/diffuser.png";
+const DEFAULT_IMAGE_ALT = "AromaIQ smart diffuser";
+
+export default function ProblemSolution({
+  imagePath = DEFAULT_IMAGE_PATH,
+  imageAlt = DEFAULT_IMAGE_ALT,
+}: ProblemSolutionProps = {}) {
   const containerRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -172,7 +191,10 @@ export default function ProblemSolution() {
             whileInView="visible"
             viewport={viewAnim}
           >
-            <DiffuserImage />
+            <ProblemSolutionImage
+              imagePath={"/images/diffuser.png"}
+              imageAlt={"Diffuser Image"}
+            />
           </motion.div>
           <motion.div
             variants={scaleIn}
@@ -180,7 +202,10 @@ export default function ProblemSolution() {
             whileInView="visible"
             viewport={viewAnim}
           >
-            <DiffuserImage />
+            <ProblemSolutionImage
+              imagePath="/images/image1.png"
+              imageAlt={"Mobile Interface Image"}
+            />
           </motion.div>
           <motion.div
             variants={fadeUp}
@@ -210,7 +235,10 @@ export default function ProblemSolution() {
               viewport={{ ...viewAnim, amount: 0.2 }}
               transition={{ delay: 0.08 }}
             >
-              <DiffuserImage />
+              <ProblemSolutionImage
+                imagePath={"/images/image1.png"}
+                imageAlt={"Diffuser Image"}
+              />
             </motion.div>
           </div>
 
@@ -223,7 +251,10 @@ export default function ProblemSolution() {
               whileInView="visible"
               viewport={viewAnim}
             >
-              <DiffuserImage />
+              <ProblemSolutionImage
+                imagePath={"/images/diffuser.png"}
+                imageAlt={"Mobile Interface Image"}
+              />
             </motion.div>
             <motion.div
               variants={slideFromRight}

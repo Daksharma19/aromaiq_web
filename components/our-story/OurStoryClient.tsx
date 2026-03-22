@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Lightbulb } from "lucide-react";
+import { Eye, Lightbulb } from "lucide-react";
 
 const storyFadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -97,6 +97,26 @@ function StatusRow({
 export default function OurStoryClient() {
   const timelineTopRef = useRef<HTMLDivElement>(null);
   const timelineBottomRef = useRef<HTMLDivElement>(null);
+  const storyGlowRef = useRef<HTMLDivElement>(null);
+  const storyGlowRafRef = useRef<number | null>(null);
+  const storyGlowPendingRef = useRef({ x: 0, y: 0 });
+
+  const flushStoryGlow = useCallback(() => {
+    storyGlowRafRef.current = null;
+    const el = storyGlowRef.current;
+    if (!el) return;
+    const { x, y } = storyGlowPendingRef.current;
+    el.style.transform = `translate3d(${x}px,${y}px,0) translate(-50%,-50%)`;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (storyGlowRafRef.current != null) {
+        cancelAnimationFrame(storyGlowRafRef.current);
+      }
+    };
+  }, []);
+
   const { scrollYProgress: scrollTop } = useScroll({
     target: timelineTopRef,
     offset: ["start 0.75", "end 0.35"],
@@ -109,7 +129,57 @@ export default function OurStoryClient() {
   const lineScaleBottom = useTransform(scrollBottom, [0, 1], [0, 1]);
 
   return (
-    <main className="min-h-screen bg-obsidian text-ivory">
+    <main
+      className="relative flex flex-1 flex-col overflow-x-hidden bg-obsidian text-ivory"
+      onMouseMove={(e) => {
+        const el = e.currentTarget;
+        const r = el.getBoundingClientRect();
+        storyGlowPendingRef.current = {
+          x: e.clientX - r.left + el.scrollLeft,
+          y: e.clientY - r.top + el.scrollTop,
+        };
+        if (storyGlowRafRef.current == null) {
+          storyGlowRafRef.current = requestAnimationFrame(flushStoryGlow);
+        }
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget;
+        const r = el.getBoundingClientRect();
+        storyGlowPendingRef.current = {
+          x: e.clientX - r.left + el.scrollLeft,
+          y: e.clientY - r.top + el.scrollTop,
+        };
+        flushStoryGlow();
+        const glow = storyGlowRef.current;
+        if (glow) glow.style.opacity = "1";
+      }}
+      onMouseLeave={() => {
+        if (storyGlowRafRef.current != null) {
+          cancelAnimationFrame(storyGlowRafRef.current);
+          storyGlowRafRef.current = null;
+        }
+        const glow = storyGlowRef.current;
+        if (glow) glow.style.opacity = "0";
+      }}
+    >
+      {/* Pointer-follow glow: full page, rAF + translate3d (no React state per move) */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 min-h-full overflow-hidden motion-reduce:hidden"
+        aria-hidden
+      >
+        <div
+          ref={storyGlowRef}
+          className="absolute left-0 top-0 h-[min(92vw,30rem)] w-[min(92vw,30rem)] rounded-full opacity-0 will-change-transform"
+          style={{
+            transform: "translate3d(0,0,0) translate(-50%,-50%)",
+            transition: "opacity 180ms ease-out",
+            background:
+              "radial-gradient(circle at center, rgba(201,169,110,0.22) 0%, rgba(201,169,110,0.09) 34%, rgba(201,169,110,0.03) 52%, transparent 68%)",
+          }}
+        />
+      </div>
+
+      <div className="relative z-[1] flex flex-1 flex-col">
       {/* Hero */}
       <header className="mx-auto max-w-4xl px-6 pb-16 pt-12 text-center md:pb-24 md:pt-16">
         <motion.p
@@ -147,7 +217,7 @@ export default function OurStoryClient() {
         {/* Chapter 1 */}
         <section className="relative grid grid-cols-1 gap-8 pb-20 md:grid-cols-[1fr_auto_1fr] md:gap-0 md:pb-28">
           <div className="hidden md:block" />
-          <div className="absolute left-8 top-8 z-10 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:top-10">
+          <div className="absolute left-8 top-0 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
           </div>
           <div className="pl-14 md:col-start-1 md:row-start-1 md:pl-0 md:pr-12 md:text-right">
@@ -162,7 +232,7 @@ export default function OurStoryClient() {
                 What if your room knew how you felt?
               </h2>
               <p className="mt-5 font-body text-sm leading-relaxed text-ivory-muted md:ml-auto md:max-w-md">
-                Two college students frustrated by the chaos of modern life —
+                Two college students frustrated by the chaos of modern life -
                 deadlines, sleepless nights, zero focus. Scent had always worked
                 for them intuitively. Why wasn&apos;t there a device smart enough
                 to figure that out automatically?
@@ -185,11 +255,11 @@ export default function OurStoryClient() {
         </section>
 
         {/* Chapter 2 */}
-        <section className="relative grid grid-cols-1 gap-8 pb-20 md:grid-cols-[1fr_auto_1fr] md:pb-28">
+        <section className="relative grid grid-cols-1 gap-8 pb-20 md:grid-cols-[1fr_auto_1fr] md:gap-0 md:pb-28">
           <div className="absolute left-8 top-8 z-10 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:top-10">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
           </div>
-          <div className="pl-14 md:col-start-3 md:pl-12">
+          <div className="pl-14 md:col-start-3 md:row-start-1 md:pl-12">
             <ChapterMotion>
               <p className="font-body text-[11px] font-medium uppercase tracking-[0.25em] text-gold">
                 The Vision
@@ -198,7 +268,7 @@ export default function OurStoryClient() {
                 AI that learns your nose.
               </h2>
               <p className="mt-5 max-w-md font-body text-sm leading-relaxed text-ivory-muted">
-                The idea took shape — a diffuser with 4 scent chambers, controlled
+                The idea took shape - a diffuser with 4 scent chambers, controlled
                 by an app that learns your patterns. Citrus in the morning to
                 brighten the start. Deep woods at night for real sleep. Bergamot
                 and peppermint when deadlines hit. The machine learns what works
@@ -209,7 +279,7 @@ export default function OurStoryClient() {
                   Revenue model
                 </p>
                 <p className="mt-3 font-body text-sm leading-relaxed text-ivory">
-                  Three streams —{" "}
+                  Three streams -{" "}
                   <span className="text-gold">Personal Diffusers</span>
                   {" · "}
                   <span className="text-gold">
@@ -223,7 +293,16 @@ export default function OurStoryClient() {
               </div>
             </ChapterMotion>
           </div>
-          <div className="hidden md:col-start-1 md:block" />
+          <div className="flex justify-start pl-14 md:col-start-1 md:row-start-1 md:justify-end md:pl-0 md:pr-12">
+            <ChapterMotion className="flex h-full items-start pt-2 md:pt-4">
+              <div
+                className="flex h-28 w-28 items-center justify-center rounded-2xl border border-gold/40 bg-obsidian-light/40"
+                aria-hidden
+              >
+                <Eye className="h-14 w-14 text-gold/90" strokeWidth={1} />
+              </div>
+            </ChapterMotion>
+          </div>
         </section>
 
         <div className="absolute bottom-0 left-8 z-10 flex h-4 w-4 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2">
@@ -232,9 +311,9 @@ export default function OurStoryClient() {
       </div>
 
       {/* Chapter 3 — Team (no timeline line; full-width editorial block) */}
-      <section className="relative mx-auto max-w-5xl px-6 pb-20 md:pb-28">
+      <section className="relative mx-auto max-w-5xl px-6 pb-20 pt-12 md:pb-28 md:pt-16">
         <ChapterMotion className="md:text-center">
-          <p className="font-body text-[11px] font-medium uppercase tracking-[0.25em] text-gold md:text-center">
+          <p className="mb-1 font-body text-[11px] font-medium uppercase tracking-[0.25em] text-gold md:text-center">
             The Team
           </p>
           <h2 className="mt-4 font-display text-2xl font-light italic text-ivory md:text-3xl">
@@ -277,8 +356,8 @@ export default function OurStoryClient() {
         </div>
       </section>
 
-      {/* Timeline part 2 — chapters 4–6 (line restarts) */}
-      <div ref={timelineBottomRef} className="relative">
+      {/* Timeline part 2 — chapters 4–5 only (line ends before “Where we’re going”) */}
+      <div ref={timelineBottomRef} className="relative mx-auto mb-10 max-w-5xl px-6 pb-8 md:mb-14">
         <div
           className="pointer-events-none absolute bottom-0 left-8 top-0 w-px bg-gold/20 md:left-1/2 md:-translate-x-1/2"
           aria-hidden
@@ -289,10 +368,9 @@ export default function OurStoryClient() {
           aria-hidden
         />
 
-        <div className="relative mx-auto max-w-5xl px-6 pb-8">
         {/* Chapter 4 */}
         <section className="relative grid grid-cols-1 gap-8 pb-20 md:grid-cols-[1fr_auto_1fr] md:pb-28">
-          <div className="absolute left-8 top-8 z-10 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:top-10">
+          <div className="absolute left-8 top-0 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
           </div>
           <div className="pl-14 md:col-start-1 md:pr-12 md:text-right">
@@ -306,7 +384,7 @@ export default function OurStoryClient() {
               <p className="mt-5 font-body text-sm leading-relaxed text-ivory-muted md:ml-auto md:max-w-md">
                 From day one, we knew we needed more than just a great idea. Our
                 college backed us early. Janam Mehta of JSW Ventures saw what we
-                were building and joined as a mentor — helping us think bigger,
+                were building and joined as a mentor - helping us think bigger,
                 move smarter, and build right.
               </p>
               <div className="mt-8 flex flex-col gap-3 md:ml-auto md:max-w-md md:items-end">
@@ -345,7 +423,7 @@ export default function OurStoryClient() {
                 Prototype on the workbench.
               </h2>
               <p className="mt-5 max-w-md font-body text-sm leading-relaxed text-ivory-muted">
-                Right now we are heads down building the MVP — a 4-scent
+                Right now we are heads down building the MVP - a 4-scent
                 diffuser hardware prototype controlled by a Flutter mobile app.
                 The hardware is being assembled. The app is being wired. The AI
                 is being trained. This is day one of something much larger.
@@ -358,22 +436,14 @@ export default function OurStoryClient() {
             </ChapterMotion>
           </div>
         </section>
-        </div>
 
-      {/* Chapter 6 — full bleed */}
-      <section className="relative overflow-hidden border-t border-gold/10 px-6 py-24 md:py-32">
-        <div className="absolute left-8 top-20 z-10 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:top-24">
+        <div className="absolute bottom-0 left-8 z-10 flex h-4 w-4 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2">
           <span className="h-1.5 w-1.5 rounded-full bg-gold" />
         </div>
-        <div
-          className="pointer-events-none absolute inset-0 opacity-90"
-          aria-hidden
-        >
-          <div className="absolute -left-1/4 top-0 h-[70%] w-[70%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(201,169,110,0.14),transparent_65%)]" />
-          <div className="absolute -right-1/4 bottom-0 h-[60%] w-[60%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(125,92,60,0.12),transparent_60%)]" />
-          <div className="absolute left-1/2 top-1/2 h-[40%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(201,169,110,0.06),transparent_70%)]" />
-        </div>
+      </div>
 
+      {/* Chapter 6 — full bleed (outside timeline; no vertical line) */}
+      <section className="relative flex flex-1 flex-col overflow-hidden border-t border-gold/10 px-6 pb-16 pt-24 md:pb-20 md:pt-32">
         <div className="relative mx-auto max-w-4xl text-center">
           <ChapterMotion>
             <p className="font-body text-[11px] font-medium uppercase tracking-[0.3em] text-gold-muted">
@@ -384,7 +454,7 @@ export default function OurStoryClient() {
             </h2>
             <p className="mx-auto mt-8 max-w-2xl font-body text-base leading-relaxed text-ivory-muted md:text-lg">
               Personal bedrooms. College dorms. Coffee shops. Boardrooms.
-              Anywhere a scent can shift the energy of a space — AromaIQ will be
+              Anywhere a scent can shift the energy of a space - AromaIQ will be
               there.
             </p>
             <Link

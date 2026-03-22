@@ -112,8 +112,8 @@ function ProductImage({
     >
       <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-walnut/30" />
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/20">
-          <span className="font-display text-2xl italic text-gold/40">A</span>
+        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-gold/20">
+          <span className="font-display text-xl italic text-gold/40">A</span>
         </div>
       </div>
     </div>
@@ -217,23 +217,23 @@ export default function ShopClient() {
 
   return (
     <main className="min-h-screen bg-ivory text-obsidian transition-colors dark:bg-obsidian dark:text-ivory">
-      <div className="mx-auto max-w-6xl px-6 pb-24 pt-10 md:pt-14">
-        <h1 className="text-center font-display text-4xl font-light italic leading-tight text-obsidian dark:text-ivory md:text-5xl lg:text-[3.25rem]">
+      <div className="mx-auto max-w-6xl px-6 pb-20 pt-8 md:pb-24 md:pt-10">
+        <h1 className="text-center font-display text-3xl font-light italic leading-tight text-obsidian dark:text-ivory md:text-4xl lg:text-[2.75rem]">
           Own your ambience.
         </h1>
 
         {loadingProducts ? (
-          <p className="mt-14 text-center font-body text-sm text-neutral-600 dark:text-ivory-muted">
+          <p className="mt-10 text-center font-body text-sm text-neutral-600 dark:text-ivory-muted">
             Loading products…
           </p>
         ) : loadError ? (
-          <p className="mt-14 text-center font-body text-sm text-red-400">{loadError}</p>
+          <p className="mt-10 text-center font-body text-sm text-red-400">{loadError}</p>
         ) : products.length === 0 ? (
-          <p className="mt-14 text-center font-body text-sm text-neutral-600 dark:text-ivory-muted">
+          <p className="mt-10 text-center font-body text-sm text-neutral-600 dark:text-ivory-muted">
             No products yet. Add some in the admin panel.
           </p>
         ) : (
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((p) => (
               <article
                 key={p.id}
@@ -246,7 +246,7 @@ export default function ShopClient() {
                     setSelected(p);
                   }
                 }}
-                className={`group flex cursor-pointer flex-col overflow-hidden rounded-2xl border bg-cream-deep text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 dark:bg-shop-surface ${
+                className={`group flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-cream-deep text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 dark:bg-shop-surface ${
                   p.featured
                     ? "border-gold"
                     : "border-gold/20 hover:border-gold/40 dark:border-gold/10 dark:hover:border-gold/25"
@@ -255,34 +255,34 @@ export default function ShopClient() {
                 <div className="relative">
                   <ProductImage
                     imageUrl={p.imageUrl}
-                    className="aspect-[4/3]"
+                    className="aspect-[16/9]"
                     alt={p.name}
                   />
                   {p.badge === "popular" && (
-                    <span className="absolute left-3 top-3 rounded-full border border-gold/40 bg-ivory/95 px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-gold dark:bg-obsidian/90">
+                    <span className="absolute left-2 top-2 rounded-full border border-gold/40 bg-ivory/95 px-2 py-0.5 font-body text-[9px] font-medium uppercase tracking-[0.18em] text-gold dark:bg-obsidian/90">
                       Most Popular
                     </span>
                   )}
                   {p.badge === "save20" && (
-                    <span className="absolute left-3 top-3 rounded-full border border-gold/40 bg-ivory/95 px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-gold dark:bg-obsidian/90">
+                    <span className="absolute left-2 top-2 rounded-full border border-gold/40 bg-ivory/95 px-2 py-0.5 font-body text-[9px] font-medium uppercase tracking-[0.18em] text-gold dark:bg-obsidian/90">
                       Save 20%
                     </span>
                   )}
                 </div>
 
-                <div className="flex flex-1 flex-col p-6">
-                  <h2 className="font-display text-2xl font-light text-obsidian dark:text-ivory">
+                <div className="flex flex-1 flex-col p-4">
+                  <h2 className="line-clamp-2 font-display text-lg font-light leading-snug text-obsidian dark:text-ivory">
                     {p.name}
                   </h2>
-                  <p className="mt-2 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted">
+                  <p className="mt-1.5 line-clamp-2 font-body text-xs leading-relaxed text-neutral-600 dark:text-ivory-muted">
                     {p.shortDescription}
                   </p>
-                  <p className="mt-4 font-display text-xl text-gold">{p.priceLabel}</p>
+                  <p className="mt-3 font-display text-lg text-gold">{p.priceLabel}</p>
                   <button
                     type="button"
                     disabled={!p.inStock || authLoading}
                     onClick={(e) => handleCardAdd(e, p)}
-                    className="mt-6 w-full rounded-lg border border-gold/35 bg-gold/10 py-3 font-body text-sm font-medium text-gold transition-colors hover:bg-gold/20 disabled:opacity-40"
+                    className="mt-4 w-full rounded-lg border border-gold/35 bg-gold/10 py-2 font-body text-xs font-medium text-gold transition-colors hover:bg-gold/20 disabled:opacity-40"
                   >
                     {!p.inStock ? "Out of stock" : "Add to Cart"}
                   </button>

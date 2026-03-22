@@ -8,7 +8,7 @@ import { ChevronDown } from "lucide-react";
 export default function HeroSection() {
   return (
     <section className="relative min-h-[100svh] overflow-hidden">
-      <VideoBackground src="/assets/diffuser.mp4" className="z-0" />
+      <VideoBackground src="/assets/videos/hero.mp4" className="z-0" />
 
       {/* Overlay layers (critical for readability). */}
       <div className="absolute inset-0 z-10 bg-ivory/65 dark:bg-obsidian/60" />

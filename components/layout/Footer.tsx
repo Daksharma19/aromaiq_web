@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const footerCols = [
   {
@@ -31,8 +34,13 @@ const footerCols = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
+  const marginTop = pathname === "/our-story" ? "mt-0" : "mt-24";
+
   return (
-    <footer className="mt-24 border-t border-gold/15 bg-cream-deep text-obsidian dark:border-transparent dark:bg-walnut dark:text-ivory transition-colors">
+    <footer
+      className={`${marginTop} border-t border-gold/15 bg-cream-deep text-obsidian transition-colors dark:border-transparent dark:bg-walnut dark:text-ivory`}
+    >
       <div className="mx-auto max-w-6xl px-6 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
