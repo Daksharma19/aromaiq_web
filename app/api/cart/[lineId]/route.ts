@@ -23,24 +23,37 @@ export async function PATCH(req: Request, ctx: Ctx) {
 
   const supabase = createServiceClient();
 
-  const { data: row } = await supabase
+  const { data: row, error: selectError } = await supabase
     .from("cart_items")
     .select("id")
     .eq("id", lineId)
     .eq("user_id", userId)
     .maybeSingle();
 
+  if (selectError) {
+    console.error("[api/cart PATCH select]", selectError);
+    return NextResponse.json({ error: "Could not load cart line" }, { status: 500 });
+  }
+
   if (!row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   if (parsed.data.quantity <= 0) {
-    await supabase.from("cart_items").delete().eq("id", lineId);
+    const { error } = await supabase.from("cart_items").delete().eq("id", lineId);
+    if (error) {
+      console.error("[api/cart PATCH delete]", error);
+      return NextResponse.json({ error: "Could not update cart" }, { status: 500 });
+    }
   } else {
-    await supabase
+    const { error } = await supabase
       .from("cart_items")
       .update({ quantity: parsed.data.quantity })
       .eq("id", lineId);
+    if (error) {
+      console.error("[api/cart PATCH update]", error);
+      return NextResponse.json({ error: "Could not update cart" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ok: true });
@@ -54,11 +67,16 @@ export async function DELETE(_req: Request, ctx: Ctx) {
 
   const { lineId } = await ctx.params;
   const supabase = createServiceClient();
-  await supabase
+  const { error } = await supabase
     .from("cart_items")
     .delete()
     .eq("id", lineId)
     .eq("user_id", userId);
+
+  if (error) {
+    console.error("[api/cart DELETE]", error);
+    return NextResponse.json({ error: "Could not remove cart item" }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
