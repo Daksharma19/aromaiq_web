@@ -2,22 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global defaults: the entire site is dark. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  color-scheme: dark;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #0E0C0A;
+  color: #F5EDD8;
+  font-family: var(--font-body), sans-serif;
 }
 
 @layer utilities {

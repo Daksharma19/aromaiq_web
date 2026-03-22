@@ -1,0 +1,63 @@
+agenerator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String
+  price       Float
+  type        ProductType
+  imageUrl    String
+  inStock     Boolean     @default(true)
+  OrderItem   OrderItem[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  razorpayOrderId String      @unique
+  razorpayPaymentId String?
+  status          OrderStatus @default(PENDING)
+  total           Float
+  customerEmail   String
+  customerName    String
+  customerPhone   String
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  order     Order  @relation(fields: [orderId], references: [id])
+  orderId   String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int
+  price     Float
+}
+
+enum ProductType {
+  DIFFUSER
+  SCENT_BOTTLE
+  BUNDLE
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
