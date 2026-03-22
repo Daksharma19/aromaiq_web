@@ -24,14 +24,9 @@ function BrandMark({ onNavigate }: { onNavigate?: () => void }) {
       aria-label="AromaIQ home"
       onClick={onNavigate}
     >
-      <Image
-        src="/assets/images/logo.jpg"
-        alt="AromaIQ"
-        width={200}
-        height={200}
-        className="h-full w-auto max-w-[min(42vw,15rem)] object-contain object-left sm:max-w-[10.5rem]"
-        priority
-      />
+      <span className="font-display text-2xl font-light italic tracking-widest text-gold sm:text-3xl">
+      AromaIQ
+      </span>
     </Link>
   );
 }
