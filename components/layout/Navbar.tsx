@@ -1,13 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { ShoppingBag, Menu, X, Sun, Moon } from "lucide-react";
+import { ShoppingBag, Menu, X } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import { useProfileStore, initialsFromName } from "@/lib/profile-store";
 import { useAuth } from "@/components/auth/auth-context";
+import { useCartSync } from "@/lib/hooks/use-cart-sync";
 import ProfileDrawer from "@/components/layout/ProfileDrawer";
 
 const navLinks = [
@@ -33,6 +33,7 @@ function BrandMark({ onNavigate }: { onNavigate?: () => void }) {
 
 export default function Navbar() {
   const { user, loading, refresh, setUser } = useAuth();
+  const { refresh: refreshCart } = useCartSync();
   const itemsCount = useCartStore((s) =>
     s.items.reduce((sum, i) => sum + i.quantity, 0)
   );
@@ -41,7 +42,6 @@ export default function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [themeDark, setThemeDark] = useState(true);
   const { scrollY } = useScroll();
 
   const bgOpacity = useTransform(scrollY, [0, 80], [0, 1], { clamp: true });
@@ -53,12 +53,9 @@ export default function Navbar() {
         email: user.email,
         phone: user.mobile ?? "",
       });
+      refreshCart();
     }
-  }, [user, setProfile]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", themeDark);
-  }, [themeDark]);
+  }, [user, setProfile, refreshCart]);
 
   const initials = user ? initialsFromName(user.name) : "";
 
@@ -139,19 +136,6 @@ export default function Navbar() {
 
               {!loading && user ? (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setThemeDark((d) => !d)}
-                    className="hidden items-center justify-center p-2 text-ivory sm:inline-flex"
-                    aria-label={themeDark ? "Light mode" : "Dark mode"}
-                  >
-                    {themeDark ? (
-                      <Moon className="h-5 w-5" strokeWidth={1.5} />
-                    ) : (
-                      <Sun className="h-5 w-5" strokeWidth={1.5} />
-                    )}
-                  </button>
-
                   <button
                     type="button"
                     onClick={() => setProfileOpen(true)}

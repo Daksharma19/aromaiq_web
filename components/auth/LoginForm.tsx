@@ -5,11 +5,13 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-context";
+import { useCartSync } from "@/lib/hooks/use-cart-sync";
 
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser } = useAuth();
+  const { refresh: refreshCart } = useCartSync();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +38,7 @@ export default function LoginForm() {
         return;
       }
       setUser(data.user);
+      await refreshCart();
       router.push(returnUrl);
       router.refresh();
     } catch {

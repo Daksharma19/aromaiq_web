@@ -205,22 +205,22 @@ export default function OurStoryClient() {
       {/* Timeline part 1 — chapters 1–2 (line ends before Team) */}
       <div ref={timelineTopRef} className="relative mx-auto max-w-5xl px-6 pb-8">
         <div
-          className="pointer-events-none absolute bottom-0 left-8 top-0 w-px bg-gold/20 md:left-1/2 md:-translate-x-1/2"
+          className="pointer-events-none absolute bottom-0 left-6 top-0 w-px bg-gold/20 md:left-1/2 md:-translate-x-1/2"
           aria-hidden
         />
         <motion.div
-          className="pointer-events-none absolute left-8 top-0 h-full w-px origin-top bg-gold md:left-1/2 md:-translate-x-1/2"
+          className="pointer-events-none absolute left-6 top-0 h-full w-px origin-top bg-gold md:left-1/2 md:-translate-x-1/2"
           style={{ scaleY: lineScaleTop }}
           aria-hidden
         />
 
-        {/* Chapter 1 */}
-        <section className="relative grid grid-cols-1 gap-8 pb-20 md:grid-cols-[1fr_auto_1fr] md:gap-0 md:pb-28">
+        {/* Chapter 1 — mobile: icon above copy; dot centered on rail */}
+        <section className="relative flex flex-col gap-8 pb-20 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-0 md:pb-28">
           <div className="hidden md:block" />
-          <div className="absolute left-8 top-0 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2">
+          <div className="absolute left-6 top-0 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:-translate-x-1/2">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
           </div>
-          <div className="pl-14 md:col-start-1 md:row-start-1 md:pl-0 md:pr-12 md:text-right">
+          <div className="order-2 pl-11 md:order-none md:col-start-1 md:row-start-1 md:pl-0 md:pr-12 md:text-right">
             <ChapterMotion>
               <p className="font-body text-xs uppercase tracking-[0.2em] text-gold-muted">
                 2024
@@ -239,8 +239,8 @@ export default function OurStoryClient() {
               </p>
             </ChapterMotion>
           </div>
-          <div className="flex justify-start pl-14 md:col-start-3 md:row-start-1 md:justify-start md:pl-12">
-            <ChapterMotion className="flex h-full items-start pt-2 md:pt-4">
+          <div className="order-1 flex justify-center pl-0 md:order-none md:col-start-3 md:row-start-1 md:justify-start md:pl-12">
+            <ChapterMotion className="flex h-full items-start pt-0 md:pt-4">
               <div
                 className="flex h-28 w-28 items-center justify-center rounded-2xl border border-gold/40 bg-obsidian-light/40"
                 aria-hidden
@@ -254,12 +254,12 @@ export default function OurStoryClient() {
           </div>
         </section>
 
-        {/* Chapter 2 */}
-        <section className="relative grid grid-cols-1 gap-8 pb-20 md:grid-cols-[1fr_auto_1fr] md:gap-0 md:pb-28">
-          <div className="absolute left-8 top-8 z-10 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:top-10">
+        {/* Chapter 2 — mobile: icon above copy */}
+        <section className="relative flex flex-col gap-8 pb-20 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-0 md:pb-28">
+          <div className="absolute left-6 top-0 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:top-10 md:-translate-x-1/2">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
           </div>
-          <div className="pl-14 md:col-start-3 md:row-start-1 md:pl-12">
+          <div className="order-2 pl-11 md:order-none md:col-start-3 md:row-start-1 md:pl-12">
             <ChapterMotion>
               <p className="font-body text-[11px] font-medium uppercase tracking-[0.25em] text-gold">
                 The Vision
@@ -293,8 +293,8 @@ export default function OurStoryClient() {
               </div>
             </ChapterMotion>
           </div>
-          <div className="flex justify-start pl-14 md:col-start-1 md:row-start-1 md:justify-end md:pl-0 md:pr-12">
-            <ChapterMotion className="flex h-full items-start pt-2 md:pt-4">
+          <div className="order-1 flex justify-center pl-0 md:order-none md:col-start-1 md:row-start-1 md:justify-end md:pl-0 md:pr-12">
+            <ChapterMotion className="flex h-full items-start pt-0 md:pt-4">
               <div
                 className="flex h-28 w-28 items-center justify-center rounded-2xl border border-gold/40 bg-obsidian-light/40"
                 aria-hidden
@@ -305,7 +305,7 @@ export default function OurStoryClient() {
           </div>
         </section>
 
-        <div className="absolute bottom-0 left-8 z-10 flex h-4 w-4 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2">
+        <div className="absolute bottom-0 left-6 z-10 flex h-4 w-4 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:-translate-x-1/2">
           <span className="h-1.5 w-1.5 rounded-full bg-gold" />
         </div>
       </div>
@@ -359,21 +359,21 @@ export default function OurStoryClient() {
       {/* Timeline part 2 — chapters 4–5 only (line ends before “Where we’re going”) */}
       <div ref={timelineBottomRef} className="relative mx-auto mb-10 max-w-5xl px-6 pb-8 md:mb-14">
         <div
-          className="pointer-events-none absolute bottom-0 left-8 top-0 w-px bg-gold/20 md:left-1/2 md:-translate-x-1/2"
+          className="pointer-events-none absolute bottom-0 left-6 top-0 w-px bg-gold/20 md:left-1/2 md:-translate-x-1/2"
           aria-hidden
         />
         <motion.div
-          className="pointer-events-none absolute left-8 top-0 h-full w-px origin-top bg-gold md:left-1/2 md:-translate-x-1/2"
+          className="pointer-events-none absolute left-6 top-0 h-full w-px origin-top bg-gold md:left-1/2 md:-translate-x-1/2"
           style={{ scaleY: lineScaleBottom }}
           aria-hidden
         />
 
         {/* Chapter 4 */}
         <section className="relative grid grid-cols-1 gap-8 pb-20 md:grid-cols-[1fr_auto_1fr] md:pb-28">
-          <div className="absolute left-8 top-0 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2">
+          <div className="absolute left-6 top-0 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:-translate-x-1/2">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
           </div>
-          <div className="pl-14 md:col-start-1 md:pr-12 md:text-right">
+          <div className="pl-11 md:col-start-1 md:pl-0 md:pr-12 md:text-right">
             <ChapterMotion>
               <p className="font-body text-[11px] font-medium uppercase tracking-[0.25em] text-gold">
                 The Mentors
@@ -410,11 +410,11 @@ export default function OurStoryClient() {
 
         {/* Chapter 5 */}
         <section className="relative grid grid-cols-1 gap-8 pb-24 md:grid-cols-[1fr_auto_1fr] md:pb-32">
-          <div className="absolute left-8 top-8 z-10 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:top-10">
+          <div className="absolute left-6 top-0 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:top-10 md:-translate-x-1/2">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
           </div>
           <div className="hidden md:block" />
-          <div className="pl-14 md:col-start-3 md:pl-12">
+          <div className="pl-11 md:col-start-3 md:pl-12">
             <ChapterMotion>
               <p className="font-body text-[11px] font-medium uppercase tracking-[0.25em] text-gold">
                 Where We Are
@@ -437,7 +437,7 @@ export default function OurStoryClient() {
           </div>
         </section>
 
-        <div className="absolute bottom-0 left-8 z-10 flex h-4 w-4 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2">
+        <div className="absolute bottom-0 left-6 z-10 flex h-4 w-4 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-obsidian md:left-1/2 md:-translate-x-1/2">
           <span className="h-1.5 w-1.5 rounded-full bg-gold" />
         </div>
       </div>

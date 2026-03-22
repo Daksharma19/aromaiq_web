@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus, X } from "lucide-react";
-import { useCartStore } from "@/lib/cart-store";
+import { useAuth } from "@/components/auth/auth-context";
+import { useCartSync } from "@/lib/hooks/use-cart-sync";
 import { isSupabaseStoragePublicUrl } from "@/lib/is-supabase-storage-url";
 
 export type ShopProduct = {
@@ -119,7 +121,9 @@ function ProductImage({
 }
 
 export default function ShopClient() {
-  const addItem = useCartStore((s) => s.addItem);
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { refresh: refreshCart } = useCartSync();
 
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -166,30 +170,49 @@ export default function ShopClient() {
 
   const close = useCallback(() => setSelected(null), []);
 
-  const addToCartLocal = useCallback(
-    (p: ShopProduct, quantity: number) => {
-      addItem({
-        productId: p.id,
-        name: p.name,
-        price: p.price,
-        quantity,
-        imageUrl: p.imageUrl ?? undefined,
+  const addToCartApi = useCallback(
+    async (p: ShopProduct, quantity: number) => {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ productId: p.id, quantity }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Could not add to cart");
+      }
+      await refreshCart();
     },
-    [addItem]
+    [refreshCart]
   );
 
-  const handleAddFromOverlay = () => {
+  const handleAddFromOverlay = async () => {
     if (!selected) return;
-    if (!selected.inStock) return;
-    addToCartLocal(selected, qty);
-    close();
+    if (!user) {
+      router.push(`/login?returnUrl=${encodeURIComponent("/shop")}`);
+      return;
+    }
+    try {
+      await addToCartApi(selected, qty);
+      close();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Error");
+    }
   };
 
-  const handleCardAdd = (e: React.MouseEvent, p: ShopProduct) => {
+  const handleCardAdd = async (e: React.MouseEvent, p: ShopProduct) => {
     e.stopPropagation();
+    if (!user) {
+      router.push(`/login?returnUrl=${encodeURIComponent("/shop")}`);
+      return;
+    }
     if (!p.inStock) return;
-    addToCartLocal(p, 1);
+    try {
+      await addToCartApi(p, 1);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error");
+    }
   };
 
   return (
@@ -207,7 +230,7 @@ export default function ShopClient() {
           <p className="mt-10 text-center font-body text-sm text-red-400">{loadError}</p>
         ) : products.length === 0 ? (
           <p className="mt-10 text-center font-body text-sm text-neutral-600 dark:text-ivory-muted">
-            No products in the catalog.
+            No products yet. Add some in the admin panel.
           </p>
         ) : (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -257,7 +280,7 @@ export default function ShopClient() {
                   <p className="mt-3 font-display text-lg text-gold">{p.priceLabel}</p>
                   <button
                     type="button"
-                    disabled={!p.inStock}
+                    disabled={!p.inStock || authLoading}
                     onClick={(e) => handleCardAdd(e, p)}
                     className="mt-4 w-full rounded-lg border border-gold/35 bg-gold/10 py-2 font-body text-xs font-medium text-gold transition-colors hover:bg-gold/20 disabled:opacity-40"
                   >
@@ -379,12 +402,14 @@ export default function ShopClient() {
                     <button
                       type="button"
                       disabled={!selected.inStock}
-                      onClick={handleAddFromOverlay}
+                      onClick={() => void handleAddFromOverlay()}
                       className="w-full rounded-lg bg-gold py-3.5 font-body text-sm font-semibold uppercase tracking-[0.12em] text-obsidian transition-opacity hover:opacity-90 disabled:opacity-40"
                     >
-                      {!selected.inStock
-                        ? "Out of stock"
-                        : `Add to Cart · ${formatInr(selected.price * qty)}`}
+                      {!user
+                        ? "Sign in to add to cart"
+                        : !selected.inStock
+                          ? "Out of stock"
+                          : `Add to Cart · ${formatInr(selected.price * qty)}`}
                     </button>
                   </div>
                 </div>

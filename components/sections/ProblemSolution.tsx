@@ -178,23 +178,23 @@ export default function ProblemSolution({
         {/* Mobile: linear stack */}
         <div className="flex flex-col gap-14 md:hidden">
           <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={viewAnim}
-          >
-            <ProblemCopy />
-          </motion.div>
-          <motion.div
             variants={scaleIn}
             initial="hidden"
             whileInView="visible"
             viewport={viewAnim}
           >
             <ProblemSolutionImage
-              imagePath={"/images/diffuser.png"}
-              imageAlt={"Diffuser Image"}
+              imagePath={imagePath}
+              imageAlt={imageAlt}
             />
+          </motion.div>
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewAnim}
+          >
+            <ProblemCopy />
           </motion.div>
           <motion.div
             variants={scaleIn}

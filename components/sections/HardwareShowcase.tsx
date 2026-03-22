@@ -1,7 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import { useRef, useState } from "react";
+import {
+  motion,
+  useMotionValueEvent,
+  useScroll,
+} from "framer-motion";
 
 const CARDS = [
   {
@@ -22,15 +26,12 @@ const CARDS = [
   },
 ] as const;
 
-/** Past this scroll progress, hover (or tap) picks the expanded card; default is first. */
-const INTERACTIVE_PROGRESS = 0.82;
+const CARD_COUNT = CARDS.length;
 
-function scrollProgressToIndex(v: number): number {
-  if (v < 0.2) return 0;
-  if (v < 0.38) return 1;
-  if (v < 0.56) return 2;
-  if (v < INTERACTIVE_PROGRESS) return 3;
-  return 3;
+function activeIndexFromProgress(p: number): number {
+  const segment = 1 / CARD_COUNT;
+  const i = Math.floor(p / segment);
+  return Math.min(Math.max(i, 0), CARD_COUNT - 1);
 }
 
 export default function HardwareShowcase() {
@@ -40,49 +41,11 @@ export default function HardwareShowcase() {
     offset: ["start start", "end end"],
   });
 
-  const [scrollExpanded, setScrollExpanded] = useState(0);
-  const [interactive, setInteractive] = useState(false);
-  const [hovered, setHovered] = useState<number | null>(null);
-  const [tapExpanded, setTapExpanded] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
-    setScrollExpanded(scrollProgressToIndex(v));
-    setInteractive(v >= INTERACTIVE_PROGRESS);
+    setActiveIndex(activeIndexFromProgress(v));
   });
-
-  useEffect(() => {
-    setScrollExpanded(0);
-    setInteractive(false);
-    setHovered(null);
-    setTapExpanded(null);
-  }, []);
-
-  const expandedIndex = interactive
-    ? hovered !== null
-      ? hovered
-      : tapExpanded !== null
-        ? tapExpanded
-        : 0
-    : scrollExpanded;
-
-  const handleCardEnter = useCallback((i: number) => {
-    if (!interactive) return;
-    setHovered(i);
-    setTapExpanded(null);
-  }, [interactive]);
-
-  const handleCardLeave = useCallback(() => {
-    setHovered(null);
-  }, []);
-
-  const handleCardClick = useCallback(
-    (i: number) => {
-      if (!interactive) return;
-      setTapExpanded((prev) => (prev === i ? null : i));
-      setHovered(null);
-    },
-    [interactive]
-  );
 
   return (
     <section
@@ -97,131 +60,95 @@ export default function HardwareShowcase() {
             </div>
 
             <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-12 xl:gap-16">
-              {/* Left: vertical stack — scroll expands 1→4, then hover/tap */}
               <div className="relative min-w-0 pl-1">
                 <div
                   className="pointer-events-none absolute left-0 top-2 bottom-2 hidden w-px bg-gradient-to-b from-gold/40 via-gold/15 to-gold/40 md:block"
                   aria-hidden
                 />
 
-                <ul
-                  className="relative flex flex-col"
-                  onMouseLeave={handleCardLeave}
-                >
+                <ul className="relative flex flex-col">
                   {CARDS.map((c, i) => {
-                    const open = expandedIndex === i;
-                    const stackInset = open ? 0 : Math.min(i, 3) * 10;
+                    const open = activeIndex === i;
+                    const stackInset = open ? 0 : Math.min(i, 3) * 8;
 
                     return (
-                      <motion.li
+                      <li
                         key={c.heading}
-                        layout
-                        transition={{
-                          layout: {
-                            type: "spring",
-                            damping: 32,
-                            stiffness: 380,
-                          },
-                        }}
-                        className="relative list-none"
+                        className={`relative list-none ${i > 0 ? "-mt-2 sm:-mt-2.5" : ""}`}
                         style={{ zIndex: open ? 30 : 10 + i }}
                       >
                         <motion.div
-                          layout
                           animate={{
                             marginLeft: stackInset,
-                            scale: open ? 1 : 0.985,
+                            scale: open ? 1 : 0.99,
                           }}
                           transition={{
-                            type: "spring",
-                            damping: 30,
-                            stiffness: 360,
+                            duration: 0.38,
+                            ease: [0.22, 1, 0.36, 1],
                           }}
                           className={[
                             "rounded-xl border bg-cream-deep/90 dark:bg-obsidian-light/70",
                             open
-                              ? "border-gold/50 shadow-[0_12px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
+                              ? "border-gold/45 shadow-[0_10px_32px_rgba(0,0,0,0.14)] dark:border-gold/35 dark:shadow-[0_10px_32px_rgba(0,0,0,0.35)]"
                               : "border-gold/15",
-                            i > 0 ? "-mt-2 sm:-mt-2.5" : "",
                           ].join(" ")}
                         >
-                          <motion.button
-                            type="button"
-                            layout
-                            onMouseEnter={() => handleCardEnter(i)}
-                            onClick={() => handleCardClick(i)}
-                            className="w-full cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
-                            aria-expanded={open}
-                          >
-                            <div className="flex items-start gap-3 p-3 sm:gap-4 sm:p-4 md:p-5">
-                              <span
-                                className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-gold/35 font-body text-[10px] font-semibold text-gold sm:size-8 sm:text-xs"
-                                aria-hidden
-                              >
-                                {String(i + 1).padStart(2, "0")}
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <motion.div
-                                  layout="position"
-                                  className="font-display text-base font-light leading-snug text-obsidian dark:text-ivory sm:text-lg md:text-xl"
-                                >
-                                  {c.heading}
-                                </motion.div>
-                                <motion.div
-                                  layout
-                                  initial={false}
-                                  animate={{
-                                    height: open ? "auto" : 0,
-                                    opacity: open ? 1 : 0,
-                                  }}
-                                  transition={{
-                                    height: {
-                                      type: "spring",
-                                      damping: 34,
-                                      stiffness: 320,
-                                    },
-                                    opacity: { duration: 0.22 },
-                                  }}
-                                  className="overflow-hidden"
-                                >
-                                  <p className="max-w-md pt-2 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted sm:pt-3 sm:text-[0.9375rem]">
-                                    {c.body}
-                                  </p>
-                                </motion.div>
+                          <div className="flex items-start gap-3 p-3 sm:gap-4 sm:p-4 md:p-5">
+                            <span
+                              className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-gold/35 font-body text-[10px] font-semibold text-gold sm:size-8 sm:text-xs"
+                              aria-hidden
+                            >
+                              {String(i + 1).padStart(2, "0")}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-display text-base font-light leading-snug text-obsidian dark:text-ivory sm:text-lg md:text-xl">
+                                {c.heading}
                               </div>
+                              <motion.div
+                                initial={false}
+                                animate={{
+                                  height: open ? "auto" : 0,
+                                  opacity: open ? 1 : 0,
+                                }}
+                                transition={{
+                                  height: {
+                                    duration: 0.4,
+                                    ease: [0.22, 1, 0.36, 1],
+                                  },
+                                  opacity: { duration: 0.28 },
+                                }}
+                                className="overflow-hidden"
+                              >
+                                <p className="max-w-md pt-2 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted sm:pt-3 sm:text-[0.9375rem]">
+                                  {c.body}
+                                </p>
+                              </motion.div>
                             </div>
-                          </motion.button>
+                          </div>
                         </motion.div>
-                      </motion.li>
+                      </li>
                     );
                   })}
                 </ul>
-
-                <p className="mt-4 font-body text-[11px] text-neutral-500 dark:text-ivory-muted/70 sm:text-xs">
-                  {interactive
-                    ? "Hover a card to expand it — or tap on touch devices."
-                    : "Keep scrolling — each card opens in turn."}
-                </p>
               </div>
 
-              {/* Right: synced index + product placeholder */}
               <div className="relative hidden min-h-[12rem] lg:block">
                 <div className="sticky top-28">
                   <motion.div
-                    key={expandedIndex}
-                    initial={{ opacity: 0, y: 12 }}
+                    key={activeIndex}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                     className="relative overflow-hidden rounded-2xl border border-gold/20 bg-cream/80 p-8 dark:border-gold/15 dark:bg-obsidian-light/50 xl:p-10"
                   >
                     <div className="font-display text-7xl font-light text-gold/25 xl:text-8xl">
-                      {String(expandedIndex + 1).padStart(2, "0")}
+                      {String(activeIndex + 1).padStart(2, "0")}
                     </div>
                     <div className="mt-4 font-display text-2xl font-light italic leading-tight text-obsidian dark:text-ivory xl:text-3xl">
-                      {CARDS[expandedIndex].heading}
+                      {CARDS[activeIndex].heading}
                     </div>
                     <div className="mt-4 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted">
-                      {CARDS[expandedIndex].body}
+                      {CARDS[activeIndex].body}
                     </div>
                     <div className="mt-8 h-32 rounded-xl border border-dashed border-gold/25 bg-obsidian/5 dark:bg-obsidian/40" />
                     <p className="mt-3 font-body text-[10px] uppercase tracking-[0.2em] text-gold/50">
