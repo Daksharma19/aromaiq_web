@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
+import LenisRoot from "@/components/layout/LenisRoot";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -31,13 +32,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${fontDisplay.variable} ${fontBody.variable} bg-obsidian text-ivory font-body antialiased`}
       >
-        <Navbar />
-        <div className="pt-20">{children}</div>
-        <Footer />
+        <LenisRoot>
+          <Navbar />
+          <div className="pt-20">{children}</div>
+          <Footer />
+        </LenisRoot>
       </body>
     </html>
   );

@@ -5,7 +5,7 @@ import HardwareShowcase from "@/components/sections/HardwareShowcase";
 
 export default function Home() {
   return (
-    <main className="bg-obsidian">
+    <main className="bg-ivory dark:bg-obsidian transition-colors">
       <HeroSection />
       <ProblemSolution />
       <HowItWorks />

@@ -2,15 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global defaults: the entire site is dark. */
 :root {
+  color-scheme: light;
+}
+
+html.dark {
   color-scheme: dark;
 }
 
 body {
-  background: #0E0C0A;
-  color: #F5EDD8;
   font-family: var(--font-body), sans-serif;
+}
+
+/* Lenis smooth scroll — https://github.com/darkroomengineering/lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
 }
 
 @layer utilities {

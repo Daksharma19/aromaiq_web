@@ -87,12 +87,12 @@ export default function HowItWorks() {
       viewport={{ once: true, amount: 0.2 }}
     >
       <ColorBends preset="warm" intensity={0.95} />
-      <div className="absolute inset-0 bg-obsidian/70 z-10 pointer-events-none" />
+      <div className="absolute inset-0 z-10 bg-ivory/80 pointer-events-none dark:bg-obsidian/70" />
 
       <div className="relative z-20 mx-auto max-w-6xl px-6">
         <motion.h2
           variants={fadeUp}
-          className="text-center font-display text-4xl md:text-5xl font-light italic"
+          className="text-center font-display text-4xl md:text-5xl font-light italic text-obsidian dark:text-ivory"
         >
           Three steps to
           <br />
@@ -105,21 +105,21 @@ export default function HowItWorks() {
               <motion.div
                 key={s.number}
                 variants={fadeUp}
-                className="flex-1 bg-obsidian-light border border-gold/15 rounded-2xl p-8"
+                className="flex-1 rounded-2xl border border-gold/20 bg-cream-deep p-8 dark:border-gold/15 dark:bg-obsidian-light"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="font-display text-6xl text-gold/20 leading-none">
                       {s.number}
                     </div>
-                    <div className="mt-4 font-display text-2xl text-ivory font-light">
+                    <div className="mt-4 font-display text-2xl font-light text-obsidian dark:text-ivory">
                       {s.title}
                     </div>
                   </div>
                   <div className="mt-1 text-gold/90">{s.icon}</div>
                 </div>
 
-                <p className="mt-5 font-body text-ivory-muted text-sm leading-relaxed">
+                <p className="mt-5 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted">
                   {s.body}
                 </p>
               </motion.div>

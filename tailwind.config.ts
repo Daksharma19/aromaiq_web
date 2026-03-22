@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,6 +11,11 @@ const config: Config = {
     extend: {
       colors: {
         obsidian: "#0E0C0A",
+        /** Product cards / panels (design spec) */
+        "shop-surface": "#1A1410",
+        /** Light-mode card / panel surfaces */
+        cream: "#EDE6D8",
+        "cream-deep": "#E0D6C8",
         "obsidian-light": "#1A1714",
         "obsidian-mid": "#2C2520",
         gold: "#C9A96E",

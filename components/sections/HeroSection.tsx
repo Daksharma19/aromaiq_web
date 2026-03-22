@@ -8,11 +8,11 @@ import { ChevronDown } from "lucide-react";
 export default function HeroSection() {
   return (
     <section className="relative min-h-[100svh] overflow-hidden">
-      <VideoBackground src="/assets/hero.mp4" className="z-0" />
+      <VideoBackground src="/assets/hero1.mp4" className="z-0" />
 
       {/* Overlay layers (critical for readability). */}
-      <div className="absolute inset-0 bg-obsidian/60 z-10" />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-obsidian/95 via-obsidian/25 to-transparent" />
+      <div className="absolute inset-0 z-10 bg-ivory/65 dark:bg-obsidian/60" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-ivory/95 via-ivory/30 to-transparent dark:from-obsidian/95 dark:via-obsidian/25 dark:to-transparent" />
       <div className="absolute inset-0 z-20 pointer-events-none opacity-[0.03]">
         <svg width="100%" height="100%" preserveAspectRatio="none">
           <filter id="grain">
@@ -34,7 +34,7 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.6 }}
-              className="mt-6 font-display font-light tracking-tight text-4xl md:text-5xl lg:text-8xl leading-none"
+              className="mt-6 font-display font-light tracking-tight text-4xl md:text-5xl lg:text-8xl leading-none text-obsidian dark:text-ivory"
             >
               <span className="block">Breathe</span>
               <span className="block relative after:absolute after:-bottom-3 after:left-0 after:w-full after:h-[1px] after:bg-gold after:opacity-80">
@@ -46,7 +46,7 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.9 }}
-              className="mt-6 font-body text-ivory-muted text-lg max-w-md mx-auto"
+              className="mt-6 font-body text-lg max-w-md mx-auto text-neutral-700 dark:text-ivory-muted"
             >
               AromaIQ reads your mood and fills the room with exactly what you
               need.
@@ -80,7 +80,7 @@ export default function HeroSection() {
             <div className="mt-14">
               <Link
                 href="#problem"
-                className="inline-flex flex-col items-center gap-2 text-sm text-ivory-muted font-body"
+                className="inline-flex flex-col items-center gap-2 text-sm font-body text-neutral-600 dark:text-ivory-muted"
               >
                 <motion.div
                   animate={{ y: [0, 4, 0], opacity: [0.8, 1, 0.85] }}
