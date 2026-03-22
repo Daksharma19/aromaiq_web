@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useCallback, useEffect } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { useCartStore } from "@/lib/cart-store";
+import { useAuth } from "@/components/auth/auth-context";
+import { useCartSync } from "@/lib/hooks/use-cart-sync";
+import { useCartStore, type CartItem } from "@/lib/cart-store";
+import { isSupabaseStoragePublicUrl } from "@/lib/is-supabase-storage-url";
 
 function formatInr(n: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -26,7 +31,35 @@ function LineImagePlaceholder() {
   );
 }
 
+function LineThumb({ item }: { item: CartItem }) {
+  if (!item.imageUrl) return <LineImagePlaceholder />;
+  const supabaseImg = isSupabaseStoragePublicUrl(item.imageUrl);
+  return (
+    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gold/15 bg-cream-deep/95 dark:bg-obsidian-mid/80">
+      {supabaseImg ? (
+        <Image
+          src={item.imageUrl}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="80px"
+        />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.imageUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+      )}
+    </div>
+  );
+}
+
 export default function CartClient() {
+  const { user, loading: authLoading } = useAuth();
+  const { refresh: refreshCart } = useCartSync();
   const items = useCartStore((s) => s.items);
   const setQuantity = useCartStore((s) => s.setQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
@@ -34,10 +67,102 @@ export default function CartClient() {
 
   const total = getTotal();
 
+  useEffect(() => {
+    if (user) refreshCart();
+  }, [user, refreshCart]);
+
+  const patchLineQuantity = useCallback(
+    async (item: CartItem, nextQty: number) => {
+      if (user && item.lineId) {
+        const res = await fetch(`/api/cart/${item.lineId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ quantity: nextQty }),
+        });
+        if (res.ok) {
+          if (nextQty <= 0) {
+            removeItem(item.productId);
+          } else {
+            setQuantity(item.productId, nextQty);
+          }
+          await refreshCart();
+        }
+        return;
+      }
+      if (nextQty <= 0) {
+        removeItem(item.productId);
+      } else {
+        setQuantity(item.productId, nextQty);
+      }
+    },
+    [user, removeItem, setQuantity, refreshCart]
+  );
+
+  const deleteLine = useCallback(
+    async (item: CartItem) => {
+      if (user && item.lineId) {
+        const res = await fetch(`/api/cart/${item.lineId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (res.ok) {
+          removeItem(item.productId);
+          await refreshCart();
+        }
+        return;
+      }
+      removeItem(item.productId);
+    },
+    [user, removeItem, refreshCart]
+  );
+
+  if (authLoading && items.length === 0) {
+    return (
+      <main className="min-h-screen bg-ivory text-obsidian transition-colors dark:bg-obsidian dark:text-ivory">
+        <div className="mx-auto max-w-2xl px-6 pb-24 pt-14 text-center">
+          <p className="font-body text-sm text-neutral-600 dark:text-ivory-muted">
+            Loading cart…
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!authLoading && !user && items.length === 0) {
+    return (
+      <main className="min-h-screen bg-ivory text-obsidian transition-colors dark:bg-obsidian dark:text-ivory">
+        <div className="mx-auto max-w-2xl px-6 pb-24 pt-10 text-center md:pt-14">
+          <h1 className="font-display text-4xl font-light italic text-obsidian dark:text-ivory md:text-5xl">
+            Sign in to view your cart
+          </h1>
+          <p className="mt-4 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted">
+            Your cart is saved when you&apos;re logged in. Create an account or sign
+            in to continue.
+          </p>
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/login?returnUrl=/cart"
+              className="inline-flex rounded-lg bg-gold px-8 py-3 font-body text-sm font-semibold uppercase tracking-[0.12em] text-obsidian transition-opacity hover:opacity-90"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/signup?returnUrl=/cart"
+              className="inline-flex rounded-lg border border-gold/35 px-8 py-3 font-body text-sm font-medium text-gold transition-colors hover:border-gold/55 hover:bg-gold/5"
+            >
+              Sign up
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <main className="min-h-screen bg-ivory text-obsidian transition-colors dark:bg-obsidian dark:text-ivory">
-        <div className="mx-auto max-w-2xl px-6 pb-24 pt-10 md:pt-14 text-center">
+        <div className="mx-auto max-w-2xl px-6 pb-24 pt-10 text-center md:pt-14">
           <h1 className="font-display text-4xl font-light italic text-obsidian dark:text-ivory md:text-5xl">
             Your cart is empty.
           </h1>
@@ -71,10 +196,10 @@ export default function CartClient() {
             const line = item.price * item.quantity;
             return (
               <li
-                key={item.productId}
+                key={item.lineId ?? item.productId}
                 className="flex gap-4 rounded-2xl border border-gold/15 bg-cream-deep p-4 dark:border-gold/10 dark:bg-shop-surface md:p-5"
               >
-                <LineImagePlaceholder />
+                <LineThumb item={item} />
                 <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 sm:flex-row sm:items-center">
                   <div className="min-w-0">
                     <h2 className="font-display text-xl font-light text-obsidian dark:text-ivory">
@@ -93,7 +218,7 @@ export default function CartClient() {
                         className="flex h-9 w-9 items-center justify-center text-neutral-500 transition-colors hover:text-obsidian disabled:opacity-30 dark:text-ivory-muted dark:hover:text-ivory"
                         disabled={item.quantity <= 1}
                         onClick={() =>
-                          setQuantity(item.productId, item.quantity - 1)
+                          patchLineQuantity(item, item.quantity - 1)
                         }
                       >
                         <Minus className="h-3.5 w-3.5" />
@@ -106,7 +231,7 @@ export default function CartClient() {
                         aria-label={`Increase ${item.name} quantity`}
                         className="flex h-9 w-9 items-center justify-center text-neutral-500 transition-colors hover:text-obsidian dark:text-ivory-muted dark:hover:text-ivory"
                         onClick={() =>
-                          setQuantity(item.productId, item.quantity + 1)
+                          patchLineQuantity(item, item.quantity + 1)
                         }
                       >
                         <Plus className="h-3.5 w-3.5" />
@@ -121,7 +246,7 @@ export default function CartClient() {
                       type="button"
                       aria-label={`Remove ${item.name} from cart`}
                       className="flex h-9 w-9 items-center justify-center rounded-lg border border-gold/20 text-neutral-500 transition-colors hover:border-gold/40 hover:text-gold dark:border-gold/15 dark:text-ivory-muted"
-                      onClick={() => removeItem(item.productId)}
+                      onClick={() => deleteLine(item)}
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                     </button>

@@ -1,54 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useProfileStore, initialsFromName } from "@/lib/profile-store";
 
 type Tab = "orders" | "profile";
-
-type DemoOrder = {
-  id: string;
-  date: string;
-  product: string;
-  status: "Delivered" | "Processing" | "Shipped";
-  price: string;
-};
-
-const DEMO_ORDERS: DemoOrder[] = [
-  {
-    id: "ORD-AI7-9241",
-    date: "12 Jan 2025",
-    product: "Full Kit",
-    status: "Delivered",
-    price: "₹7,999",
-  },
-  {
-    id: "ORD-AI7-8802",
-    date: "3 Feb 2025",
-    product: "Sleep Pack",
-    status: "Shipped",
-    price: "₹1,299",
-  },
-  {
-    id: "ORD-AI7-9012",
-    date: "18 Feb 2025",
-    product: "Starter Kit",
-    status: "Processing",
-    price: "₹4,999",
-  },
-];
-
-function statusPillClass(status: DemoOrder["status"]) {
-  switch (status) {
-    case "Delivered":
-      return "border-gold/50 bg-gold/15 text-gold-light";
-    case "Shipped":
-      return "border-gold/40 bg-gold/10 text-gold";
-    default:
-      return "border-gold/35 bg-gold/8 text-gold-muted";
-  }
-}
 
 type ProfileDrawerProps = {
   open: boolean;
@@ -57,7 +15,6 @@ type ProfileDrawerProps = {
 
 export default function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
   const [tab, setTab] = useState<Tab>("orders");
-  const [orders] = useState<DemoOrder[]>(DEMO_ORDERS);
 
   const fullName = useProfileStore((s) => s.fullName);
   const email = useProfileStore((s) => s.email);
@@ -172,43 +129,17 @@ export default function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
                   <h3 className="font-display text-2xl font-light italic text-ivory">
                     Your Orders
                   </h3>
-
-                  {orders.length === 0 ? (
-                    <p className="mt-8 font-body text-sm leading-relaxed text-ivory-muted">
-                      No orders yet. Start with a kit.
-                    </p>
-                  ) : (
-                    <ul className="mt-6 space-y-4">
-                      {orders.map((o) => (
-                        <li
-                          key={o.id}
-                          className="rounded-xl border border-gold/12 bg-obsidian-light/50 p-4"
-                        >
-                          <div className="flex flex-wrap items-start justify-between gap-2">
-                            <div>
-                              <p className="font-body text-xs uppercase tracking-wider text-gold-muted">
-                                {o.id}
-                              </p>
-                              <p className="mt-1 font-body text-xs text-ivory-muted">
-                                {o.date}
-                              </p>
-                            </div>
-                            <span
-                              className={`rounded-full border px-2.5 py-0.5 font-body text-[10px] font-medium uppercase tracking-wider ${statusPillClass(o.status)}`}
-                            >
-                              {o.status}
-                            </span>
-                          </div>
-                          <p className="mt-3 font-display text-lg font-light text-ivory">
-                            {o.product}
-                          </p>
-                          <p className="mt-2 font-display text-lg text-gold">
-                            {o.price}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <p className="mt-6 font-body text-sm leading-relaxed text-ivory-muted">
+                    Make an order from the shop. Your order history will show here
+                    once checkout is connected.
+                  </p>
+                  <Link
+                    href="/shop"
+                    onClick={onClose}
+                    className="mt-6 inline-block font-body text-sm font-medium text-gold underline-offset-4 transition-colors hover:text-gold-light hover:underline"
+                  >
+                    Browse the shop
+                  </Link>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">

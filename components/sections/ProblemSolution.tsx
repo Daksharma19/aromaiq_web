@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef } from "react";
 import {
   motion,
@@ -7,7 +8,6 @@ import {
   useTransform,
   type MotionValue,
 } from "framer-motion";
-import { RotateCw } from "lucide-react";
 import ColorBends from "@/components/backgrounds/ColorBends";
 import {
   fadeUp,
@@ -34,42 +34,18 @@ const viewAnim = {
   margin: "-60px 0px",
 } as const;
 
-function ImagePlaceholder({
-  label,
-  showRotateHint,
-  variant = "default",
-}: {
-  label: string;
-  showRotateHint?: boolean;
-  variant?: "default" | "dashed";
-}) {
+function DiffuserImage() {
   return (
-    <div
-      className={`relative flex aspect-[4/3] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-gold/15 bg-obsidian-light/40 ${
-        variant === "dashed" ? "border-dashed border-gold/30" : ""
-      }`}
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-gold/[0.06] via-transparent to-walnut/20" />
-      {showRotateHint ? (
-        <div className="relative z-10 mb-3 flex flex-col items-center gap-2">
-          <RotateCw
-            className="h-6 w-6 text-gold/50"
-            strokeWidth={1.25}
-            aria-hidden
-          />
-          <div className="flex min-h-[100px] min-w-[min(200px,70%)] items-center justify-center rounded-lg border border-dashed border-gold/35 bg-obsidian/30 px-6 py-8">
-            <span className="font-body text-xs uppercase tracking-[0.25em] text-gold/45">
-              Image
-            </span>
-          </div>
-        </div>
-      ) : (
-        <div className="relative z-10 flex min-h-[120px] min-w-[min(220px,75%)] items-center justify-center rounded-xl border border-gold/20 bg-obsidian/25 px-6 py-10">
-          <span className="font-body text-xs uppercase tracking-[0.25em] text-gold/45">
-            {label}
-          </span>
-        </div>
-      )}
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-gold/15 bg-obsidian-light/40">
+      <Image
+        src="/images/diffuser.png"
+        alt="AromaIQ smart diffuser"
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 100vw, 33vw"
+        priority
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-gold/[0.06] via-transparent to-walnut/25" />
     </div>
   );
 }
@@ -196,7 +172,7 @@ export default function ProblemSolution() {
             whileInView="visible"
             viewport={viewAnim}
           >
-            <ImagePlaceholder label="Image" showRotateHint />
+            <DiffuserImage />
           </motion.div>
           <motion.div
             variants={scaleIn}
@@ -204,7 +180,7 @@ export default function ProblemSolution() {
             whileInView="visible"
             viewport={viewAnim}
           >
-            <ImagePlaceholder label="Image" />
+            <DiffuserImage />
           </motion.div>
           <motion.div
             variants={fadeUp}
@@ -234,7 +210,7 @@ export default function ProblemSolution() {
               viewport={{ ...viewAnim, amount: 0.2 }}
               transition={{ delay: 0.08 }}
             >
-              <ImagePlaceholder label="Image" showRotateHint />
+              <DiffuserImage />
             </motion.div>
           </div>
 
@@ -247,7 +223,7 @@ export default function ProblemSolution() {
               whileInView="visible"
               viewport={viewAnim}
             >
-              <ImagePlaceholder label="Image" />
+              <DiffuserImage />
             </motion.div>
             <motion.div
               variants={slideFromRight}

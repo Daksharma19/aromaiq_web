@@ -1,32 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { ShoppingBag, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X, Sun, Moon } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import { useProfileStore, initialsFromName } from "@/lib/profile-store";
+import { useAuth } from "@/components/auth/auth-context";
+import { useCartSync } from "@/lib/hooks/use-cart-sync";
 import ProfileDrawer from "@/components/layout/ProfileDrawer";
 
 const navLinks = [
   { label: "Shop", href: "/shop" },
-  { label: "How It Works", href: "#how-it-works" },
-  // { label: "Scents", href: "#scents" },
-  { label: "Our Story", href: "#our-story" },
+  // { label: "How It Works", href: "#how-it-works" },
+  { label: "Our Story", href: "/our-story" },
 ];
 
 export default function Navbar() {
+  const { user, loading, refresh, setUser } = useAuth();
+  const { refresh: refreshCart } = useCartSync();
   const itemsCount = useCartStore((s) =>
     s.items.reduce((sum, i) => sum + i.quantity, 0)
   );
-  const fullName = useProfileStore((s) => s.fullName);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const setProfile = useProfileStore((s) => s.setProfile);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [themeDark, setThemeDark] = useState(true);
   const { scrollY } = useScroll();
 
   const bgOpacity = useTransform(scrollY, [0, 80], [0, 1], { clamp: true });
-  const initials = initialsFromName(fullName);
+
+  useEffect(() => {
+    if (user) {
+      setProfile({
+        fullName: user.name,
+        email: user.email,
+        phone: user.mobile ?? "",
+      });
+      refreshCart();
+    }
+  }, [user, setProfile, refreshCart]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", themeDark);
+  }, [themeDark]);
+
+  const initials = user ? initialsFromName(user.name) : "";
+
+  const logout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    clearCart();
+    setUser(null);
+    refresh();
+  }, [clearCart, refresh, setUser]);
 
   return (
     <>
@@ -46,7 +74,7 @@ export default function Navbar() {
               Aroma<span className="text-gold">IQ</span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden items-center gap-8 md:flex">
               {navLinks.map((l) => (
                 <Link
                   key={l.label}
@@ -56,34 +84,84 @@ export default function Navbar() {
                   {l.label}
                 </Link>
               ))}
+              {user?.role === "admin" ? (
+                <Link
+                  href="/admin/products"
+                  className="font-body text-sm uppercase tracking-widest text-gold transition hover:text-gold-light"
+                >
+                  Admin
+                </Link>
+              ) : null}
             </nav>
 
             <div className="flex items-center gap-1 sm:gap-2">
-              <Link
-                href="/cart"
-                className="relative inline-flex items-center justify-center p-2"
-                aria-label="Cart"
-              >
-                <ShoppingBag className="text-ivory" size={20} />
-                {itemsCount > 0 ? (
-                  <span className="absolute -top-0.5 right-0.5 min-w-6 h-6 px-1 rounded-full bg-gold text-obsidian text-[11px] font-body flex items-center justify-center">
-                    {itemsCount}
-                  </span>
-                ) : null}
-              </Link>
+              {!loading && !user ? (
+                <>
+                  <Link
+                    href="/login"
+                    className="hidden rounded-lg border border-gold/35 px-4 py-2 font-body text-sm text-gold transition-colors hover:border-gold/55 hover:bg-gold/5 sm:inline-flex"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="hidden rounded-lg bg-gold px-4 py-2 font-body text-sm font-medium text-obsidian transition-opacity hover:opacity-90 sm:inline-flex"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              ) : null}
+
+              {!loading && user ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setThemeDark((d) => !d)}
+                    className="hidden items-center justify-center p-2 text-ivory sm:inline-flex"
+                    aria-label={themeDark ? "Light mode" : "Dark mode"}
+                  >
+                    {themeDark ? (
+                      <Moon className="h-5 w-5" strokeWidth={1.5} />
+                    ) : (
+                      <Sun className="h-5 w-5" strokeWidth={1.5} />
+                    )}
+                  </button>
+
+                  <Link
+                    href="/cart"
+                    className="relative inline-flex items-center justify-center p-2"
+                    aria-label="Cart"
+                  >
+                    <ShoppingBag className="text-ivory" size={20} />
+                    {itemsCount > 0 ? (
+                      <span className="absolute -top-0.5 right-0.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-gold px-1 font-body text-[11px] text-obsidian">
+                        {itemsCount}
+                      </span>
+                    ) : null}
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => setProfileOpen(true)}
+                    className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-full border-2 border-gold bg-obsidian-light/80 font-display text-xs text-ivory"
+                    aria-label="Open profile"
+                  >
+                    {initials}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => logout()}
+                    className="hidden font-body text-xs uppercase tracking-wider text-ivory-muted hover:text-gold lg:inline"
+                  >
+                    Log out
+                  </button>
+                </>
+              ) : null}
 
               <button
                 type="button"
-                onClick={() => setProfileOpen(true)}
-                className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-full border-2 border-gold bg-obsidian-light/80 font-display text-xs text-ivory"
-                aria-label="Open profile"
-              >
-                {initials}
-              </button>
-
-              <button
-                type="button"
-                className="md:hidden inline-flex items-center justify-center p-2"
+                className="inline-flex items-center justify-center p-2 md:hidden"
                 onClick={() => setMenuOpen(true)}
                 aria-label="Open menu"
               >
@@ -109,7 +187,7 @@ export default function Navbar() {
             <div className="absolute inset-0 bg-obsidian/95 backdrop-blur-sm" />
 
             <motion.div
-              className="relative mx-auto max-w-6xl h-full px-6"
+              className="relative mx-auto h-full max-w-6xl px-6"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 20, opacity: 0 }}
@@ -158,6 +236,51 @@ export default function Navbar() {
                     </Link>
                   </motion.div>
                 ))}
+                {user?.role === "admin" ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 12 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <Link
+                      href="/admin/products"
+                      className="font-display text-3xl font-light italic text-gold transition hover:text-gold-light"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Admin
+                    </Link>
+                  </motion.div>
+                ) : null}
+                {!user ? (
+                  <div className="mt-6 flex flex-col gap-3">
+                    <Link
+                      href="/login"
+                      className="w-fit rounded-lg border border-gold/35 px-6 py-3 font-body text-sm text-gold"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="w-fit rounded-lg bg-gold px-6 py-3 font-body text-sm text-obsidian"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="mt-4 w-fit font-body text-sm uppercase tracking-wider text-ivory-muted"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      logout();
+                    }}
+                  >
+                    Log out
+                  </button>
+                )}
               </motion.nav>
             </motion.div>
           </motion.div>

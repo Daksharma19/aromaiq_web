@@ -1,9 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus, X } from "lucide-react";
-import { useCartStore } from "@/lib/cart-store";
+import { useAuth } from "@/components/auth/auth-context";
+import { useCartSync } from "@/lib/hooks/use-cart-sync";
+import { isSupabaseStoragePublicUrl } from "@/lib/is-supabase-storage-url";
 
 export type ShopProduct = {
   id: string;
@@ -15,60 +19,19 @@ export type ShopProduct = {
   scents?: string[];
   featured?: boolean;
   badge?: "popular" | "save20";
+  imageUrl?: string | null;
+  inStock: boolean;
 };
 
-const PRODUCTS: ShopProduct[] = [
-  {
-    id: "starter-kit",
-    name: "Starter Kit",
-    priceLabel: "₹4,999",
-    price: 4999,
-    shortDescription: "Diffuser + 2 scent bottles",
-    fullDescription:
-      "Everything you need to begin your AromaIQ ritual: our four-chamber smart diffuser and two curated essential oil bottles. Perfect for smaller spaces and first-time explorers who want intelligent ambience without compromise.",
-  },
-  {
-    id: "full-kit",
-    name: "Full Kit",
-    priceLabel: "₹7,999",
-    price: 7999,
-    shortDescription: "Diffuser + 6 scent bottles",
-    fullDescription:
-      "The complete AromaIQ experience. Full diffuser system with six premium blends so the AI can rotate moods across your week—from deep focus to wind-down. Our most complete bundle for homes that live in scent.",
-    featured: true,
-    badge: "popular",
-  },
-  {
-    id: "sleep-pack",
-    name: "Sleep Pack",
-    priceLabel: "₹1,299",
-    price: 1299,
-    shortDescription: "Cedarwood, Vetiver, Mogra, Vanilla",
-    fullDescription:
-      "A quartet of oils chosen for calm and depth of rest. Layer them through the evening as AromaIQ softens intensity automatically, or diffuse a single note—each bottle is pure-grade and blended to settle the mind.",
-    scents: ["Cedarwood", "Vetiver", "Mogra", "Vanilla"],
-  },
-  {
-    id: "focus-pack",
-    name: "Focus Pack",
-    priceLabel: "₹1,299",
-    price: 1299,
-    shortDescription: "Peppermint, Eucalyptus, Bergamot, Rosemary",
-    fullDescription:
-      "Bright, clarifying botanicals for work sessions and creative sprints. Use with Focus mode in the app for timed bursts of clarity, or let the engine suggest the right oil for your calendar.",
-    scents: ["Peppermint", "Eucalyptus", "Bergamot", "Rosemary"],
-  },
-  {
-    id: "monthly-refill",
-    name: "Monthly Refill",
-    priceLabel: "₹1,499/mo",
-    price: 1499,
-    shortDescription: "AI-curated, 2 bottles/month",
-    fullDescription:
-      "Subscribe for two surprise bottles every month, selected by AromaIQ from our library of fifteen oils based on your usage and preferences. Skip or pause anytime—shipping is carbon-neutral where available.",
-    badge: "save20",
-  },
-];
+type DbProduct = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  image_url: string | null;
+  category: string | null;
+  in_stock: boolean;
+};
 
 function formatInr(n: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -78,7 +41,70 @@ function formatInr(n: number) {
   }).format(n);
 }
 
-function ProductImagePlaceholder({ className }: { className?: string }) {
+function mapDbToShop(row: DbProduct): ShopProduct {
+  const desc = row.description?.trim() || "";
+  const short =
+    desc.length > 140 ? `${desc.slice(0, 140).trim()}…` : desc || row.name;
+  const cat = (row.category || "").toLowerCase();
+  const scentMatch = row.category?.match(/scents:\s*(.+)/i);
+  const scents = scentMatch
+    ? scentMatch[1].split(/[,|]/).map((s) => s.trim()).filter(Boolean)
+    : undefined;
+
+  return {
+    id: row.id,
+    name: row.name,
+    price: Number(row.price),
+    priceLabel: formatInr(Number(row.price)),
+    shortDescription: short,
+    fullDescription: desc || row.name,
+    scents,
+    featured: cat.includes("featured"),
+    badge: cat.includes("popular")
+      ? "popular"
+      : cat.includes("save") || cat.includes("subscription")
+        ? "save20"
+        : undefined,
+    imageUrl: row.image_url,
+    inStock: row.in_stock,
+  };
+}
+
+function ProductImage({
+  imageUrl,
+  className,
+  alt = "",
+}: {
+  imageUrl?: string | null;
+  className?: string;
+  alt?: string;
+}) {
+  if (imageUrl) {
+    const supabaseImg = isSupabaseStoragePublicUrl(imageUrl);
+    return (
+      <div
+        className={`relative w-full overflow-hidden bg-obsidian-mid/40 ${className ?? ""}`}
+      >
+        {supabaseImg ? (
+          <Image
+            src={imageUrl}
+            alt={alt}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- arbitrary admin-provided URLs
+          <img
+            src={imageUrl}
+            alt={alt}
+            className="absolute inset-0 h-full w-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        )}
+      </div>
+    );
+  }
   return (
     <div
       className={`relative overflow-hidden bg-cream-deep/95 dark:bg-obsidian-mid/80 ${className ?? ""}`}
@@ -86,8 +112,8 @@ function ProductImagePlaceholder({ className }: { className?: string }) {
     >
       <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-walnut/30" />
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="h-16 w-16 rounded-full border border-gold/20 flex items-center justify-center">
-          <span className="font-display text-2xl text-gold/40 italic">A</span>
+        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/20">
+          <span className="font-display text-2xl italic text-gold/40">A</span>
         </div>
       </div>
     </div>
@@ -95,9 +121,42 @@ function ProductImagePlaceholder({ className }: { className?: string }) {
 }
 
 export default function ShopClient() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { refresh: refreshCart } = useCartSync();
+
+  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
   const [selected, setSelected] = useState<ShopProduct | null>(null);
   const [qty, setQty] = useState(1);
-  const addItem = useCartStore((s) => s.addItem);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/products", { cache: "no-store" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load");
+        const rows = (data.products || []) as DbProduct[];
+        if (!cancelled) {
+          setProducts(rows.map(mapDbToShop));
+          setLoadError(null);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setLoadError(e instanceof Error ? e.message : "Could not load products");
+          setProducts([]);
+        }
+      } finally {
+        if (!cancelled) setLoadingProducts(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!selected) return;
@@ -111,84 +170,127 @@ export default function ShopClient() {
 
   const close = useCallback(() => setSelected(null), []);
 
-  const handleAddFromOverlay = () => {
+  const addToCartApi = useCallback(
+    async (p: ShopProduct, quantity: number) => {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ productId: p.id, quantity }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Could not add to cart");
+      }
+      await refreshCart();
+    },
+    [refreshCart]
+  );
+
+  const handleAddFromOverlay = async () => {
     if (!selected) return;
-    addItem({
-      productId: selected.id,
-      name: selected.name,
-      price: selected.price,
-      quantity: qty,
-    });
-    close();
+    if (!user) {
+      router.push(`/login?returnUrl=${encodeURIComponent("/shop")}`);
+      return;
+    }
+    try {
+      await addToCartApi(selected, qty);
+      close();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const handleCardAdd = async (e: React.MouseEvent, p: ShopProduct) => {
+    e.stopPropagation();
+    if (!user) {
+      router.push(`/login?returnUrl=${encodeURIComponent("/shop")}`);
+      return;
+    }
+    if (!p.inStock) return;
+    try {
+      await addToCartApi(p, 1);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error");
+    }
   };
 
   return (
     <main className="min-h-screen bg-ivory text-obsidian transition-colors dark:bg-obsidian dark:text-ivory">
       <div className="mx-auto max-w-6xl px-6 pb-24 pt-10 md:pt-14">
-        <h1 className="text-center font-display text-4xl font-light italic md:text-5xl lg:text-[3.25rem] leading-tight text-obsidian dark:text-ivory">
+        <h1 className="text-center font-display text-4xl font-light italic leading-tight text-obsidian dark:text-ivory md:text-5xl lg:text-[3.25rem]">
           Own your ambience.
         </h1>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-          {PRODUCTS.map((p) => (
-            <article
-              key={p.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelected(p)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setSelected(p);
-                }
-              }}
-              className={`group flex cursor-pointer flex-col overflow-hidden rounded-2xl border bg-cream-deep text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 dark:bg-shop-surface ${
-                p.featured
-                  ? "border-gold"
-                  : "border-gold/20 hover:border-gold/40 dark:border-gold/10 dark:hover:border-gold/25"
-              }`}
-            >
-              <div className="relative">
-                <ProductImagePlaceholder className="aspect-[4/3] w-full" />
-                {p.badge === "popular" && (
-                  <span className="absolute left-3 top-3 rounded-full border border-gold/40 bg-ivory/95 px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-gold dark:bg-obsidian/90">
-                    Most Popular
-                  </span>
-                )}
-                {p.badge === "save20" && (
-                  <span className="absolute left-3 top-3 rounded-full border border-gold/40 bg-ivory/95 px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-gold dark:bg-obsidian/90">
-                    Save 20%
-                  </span>
-                )}
-              </div>
+        {loadingProducts ? (
+          <p className="mt-14 text-center font-body text-sm text-neutral-600 dark:text-ivory-muted">
+            Loading products…
+          </p>
+        ) : loadError ? (
+          <p className="mt-14 text-center font-body text-sm text-red-400">{loadError}</p>
+        ) : products.length === 0 ? (
+          <p className="mt-14 text-center font-body text-sm text-neutral-600 dark:text-ivory-muted">
+            No products yet. Add some in the admin panel.
+          </p>
+        ) : (
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((p) => (
+              <article
+                key={p.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelected(p)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(p);
+                  }
+                }}
+                className={`group flex cursor-pointer flex-col overflow-hidden rounded-2xl border bg-cream-deep text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 dark:bg-shop-surface ${
+                  p.featured
+                    ? "border-gold"
+                    : "border-gold/20 hover:border-gold/40 dark:border-gold/10 dark:hover:border-gold/25"
+                }`}
+              >
+                <div className="relative">
+                  <ProductImage
+                    imageUrl={p.imageUrl}
+                    className="aspect-[4/3]"
+                    alt={p.name}
+                  />
+                  {p.badge === "popular" && (
+                    <span className="absolute left-3 top-3 rounded-full border border-gold/40 bg-ivory/95 px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-gold dark:bg-obsidian/90">
+                      Most Popular
+                    </span>
+                  )}
+                  {p.badge === "save20" && (
+                    <span className="absolute left-3 top-3 rounded-full border border-gold/40 bg-ivory/95 px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-gold dark:bg-obsidian/90">
+                      Save 20%
+                    </span>
+                  )}
+                </div>
 
-              <div className="flex flex-1 flex-col p-6">
-                <h2 className="font-display text-2xl font-light text-obsidian dark:text-ivory">
-                  {p.name}
-                </h2>
-                <p className="mt-2 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted">
-                  {p.shortDescription}
-                </p>
-                <p className="mt-4 font-display text-xl text-gold">{p.priceLabel}</p>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addItem({
-                      productId: p.id,
-                      name: p.name,
-                      price: p.price,
-                      quantity: 1,
-                    });
-                  }}
-                  className="mt-6 w-full rounded-lg border border-gold/35 bg-gold/10 py-3 font-body text-sm font-medium text-gold transition-colors hover:bg-gold/20"
-                >
-                  Add to Cart
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
+                <div className="flex flex-1 flex-col p-6">
+                  <h2 className="font-display text-2xl font-light text-obsidian dark:text-ivory">
+                    {p.name}
+                  </h2>
+                  <p className="mt-2 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted">
+                    {p.shortDescription}
+                  </p>
+                  <p className="mt-4 font-display text-xl text-gold">{p.priceLabel}</p>
+                  <button
+                    type="button"
+                    disabled={!p.inStock || authLoading}
+                    onClick={(e) => handleCardAdd(e, p)}
+                    className="mt-6 w-full rounded-lg border border-gold/35 bg-gold/10 py-3 font-body text-sm font-medium text-gold transition-colors hover:bg-gold/20 disabled:opacity-40"
+                  >
+                    {!p.inStock ? "Out of stock" : "Add to Cart"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
@@ -225,8 +327,12 @@ export default function ShopClient() {
               </button>
 
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
-                <div className="relative shrink-0 md:w-1/2 md:border-r md:border-gold/15 dark:md:border-gold/10">
-                  <ProductImagePlaceholder className="aspect-square w-full md:aspect-auto md:h-full md:min-h-[320px]" />
+                <div className="relative min-h-[240px] shrink-0 md:w-1/2 md:border-r md:border-gold/15 dark:md:border-gold/10 md:min-h-[320px]">
+                  <ProductImage
+                    imageUrl={selected.imageUrl}
+                    className="min-h-[240px] md:absolute md:inset-0 md:min-h-0 aspect-square md:aspect-auto"
+                    alt={selected.name}
+                  />
                 </div>
 
                 <div className="flex flex-1 flex-col gap-6 p-6 pb-10 md:p-10 md:pb-10">
@@ -295,10 +401,15 @@ export default function ShopClient() {
 
                     <button
                       type="button"
+                      disabled={!selected.inStock}
                       onClick={handleAddFromOverlay}
-                      className="w-full rounded-lg bg-gold py-3.5 font-body text-sm font-semibold uppercase tracking-[0.12em] text-obsidian transition-opacity hover:opacity-90"
+                      className="w-full rounded-lg bg-gold py-3.5 font-body text-sm font-semibold uppercase tracking-[0.12em] text-obsidian transition-opacity hover:opacity-90 disabled:opacity-40"
                     >
-                      Add to Cart · {formatInr(selected.price * qty)}
+                      {!user
+                        ? "Sign in to add to cart"
+                        : !selected.inStock
+                          ? "Out of stock"
+                          : `Add to Cart · ${formatInr(selected.price * qty)}`}
                     </button>
                   </div>
                 </div>

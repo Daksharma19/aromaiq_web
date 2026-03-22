@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import LenisRoot from "@/components/layout/LenisRoot";
+import { AuthProvider } from "@/components/auth/auth-context";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -34,12 +35,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${fontDisplay.variable} ${fontBody.variable} bg-obsidian text-ivory font-body antialiased`}
+        className={`${fontDisplay.variable} ${fontBody.variable} bg-ivory text-obsidian font-body antialiased transition-colors dark:bg-obsidian dark:text-ivory`}
       >
         <LenisRoot>
-          <Navbar />
-          <div className="pt-20">{children}</div>
-          <Footer />
+          <AuthProvider>
+            <Navbar />
+            <div className="pt-20">{children}</div>
+            <Footer />
+          </AuthProvider>
         </LenisRoot>
       </body>
     </html>

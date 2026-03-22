@@ -1,15 +1,18 @@
 import { create } from "zustand";
 
 export type CartItem = {
+  /** Server cart line id when synced from Supabase */
+  lineId?: string;
   productId: string;
   name: string;
-  price: number; // stored for UI only; checkout must recompute server-side
+  price: number;
   quantity: number;
   imageUrl?: string;
 };
 
 type CartState = {
   items: CartItem[];
+  setFromServer: (items: CartItem[]) => void;
   addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
   setQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
@@ -19,6 +22,7 @@ type CartState = {
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
+  setFromServer: (items) => set({ items }),
   addItem: (item) =>
     set((state) => {
       const quantityToAdd = item.quantity ?? 1;

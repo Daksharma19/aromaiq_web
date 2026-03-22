@@ -13,7 +13,7 @@ const footerCols = [
   {
     title: "Company",
     links: [
-      { label: "Our Story", href: "#our-story" },
+      { label: "Our Story", href: "/our-story" },
       { label: "How It Works", href: "#how-it-works" },
       { label: "The App", href: "#app" },
       { label: "Press Kit", href: "#" },
