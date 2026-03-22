@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { useAuth } from "@/components/auth/auth-context";
-import { useCartSync } from "@/lib/hooks/use-cart-sync";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
 import { isSupabaseStoragePublicUrl } from "@/lib/is-supabase-storage-url";
 
@@ -58,8 +56,6 @@ function LineThumb({ item }: { item: CartItem }) {
 }
 
 export default function CartClient() {
-  const { user, loading: authLoading } = useAuth();
-  const { refresh: refreshCart } = useCartSync();
   const items = useCartStore((s) => s.items);
   const setQuantity = useCartStore((s) => s.setQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
@@ -67,97 +63,23 @@ export default function CartClient() {
 
   const total = getTotal();
 
-  useEffect(() => {
-    if (user) refreshCart();
-  }, [user, refreshCart]);
-
   const patchLineQuantity = useCallback(
-    async (item: CartItem, nextQty: number) => {
-      if (user && item.lineId) {
-        const res = await fetch(`/api/cart/${item.lineId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ quantity: nextQty }),
-        });
-        if (res.ok) {
-          if (nextQty <= 0) {
-            removeItem(item.productId);
-          } else {
-            setQuantity(item.productId, nextQty);
-          }
-          await refreshCart();
-        }
-        return;
-      }
+    (item: CartItem, nextQty: number) => {
       if (nextQty <= 0) {
         removeItem(item.productId);
       } else {
         setQuantity(item.productId, nextQty);
       }
     },
-    [user, removeItem, setQuantity, refreshCart]
+    [removeItem, setQuantity]
   );
 
   const deleteLine = useCallback(
-    async (item: CartItem) => {
-      if (user && item.lineId) {
-        const res = await fetch(`/api/cart/${item.lineId}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-        if (res.ok) {
-          removeItem(item.productId);
-          await refreshCart();
-        }
-        return;
-      }
+    (item: CartItem) => {
       removeItem(item.productId);
     },
-    [user, removeItem, refreshCart]
+    [removeItem]
   );
-
-  if (authLoading && items.length === 0) {
-    return (
-      <main className="min-h-screen bg-ivory text-obsidian transition-colors dark:bg-obsidian dark:text-ivory">
-        <div className="mx-auto max-w-2xl px-6 pb-24 pt-14 text-center">
-          <p className="font-body text-sm text-neutral-600 dark:text-ivory-muted">
-            Loading cart…
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  if (!authLoading && !user && items.length === 0) {
-    return (
-      <main className="min-h-screen bg-ivory text-obsidian transition-colors dark:bg-obsidian dark:text-ivory">
-        <div className="mx-auto max-w-2xl px-6 pb-24 pt-10 text-center md:pt-14">
-          <h1 className="font-display text-4xl font-light italic text-obsidian dark:text-ivory md:text-5xl">
-            Sign in to view your cart
-          </h1>
-          <p className="mt-4 font-body text-sm leading-relaxed text-neutral-600 dark:text-ivory-muted">
-            Your cart is saved when you&apos;re logged in. Create an account or sign
-            in to continue.
-          </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/login?returnUrl=/cart"
-              className="inline-flex rounded-lg bg-gold px-8 py-3 font-body text-sm font-semibold uppercase tracking-[0.12em] text-obsidian transition-opacity hover:opacity-90"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/signup?returnUrl=/cart"
-              className="inline-flex rounded-lg border border-gold/35 px-8 py-3 font-body text-sm font-medium text-gold transition-colors hover:border-gold/55 hover:bg-gold/5"
-            >
-              Sign up
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   if (items.length === 0) {
     return (

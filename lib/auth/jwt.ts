@@ -6,13 +6,17 @@ export type SessionPayload = {
   role: string;
 };
 
-function getSecret() {
-  const s = process.env.JWT_SECRET;
-  if (!s) throw new Error("JWT_SECRET is not set");
+function getSecret(): Uint8Array | null {
+  const s = process.env.JWT_SECRET?.trim();
+  if (!s) return null;
   return new TextEncoder().encode(s);
 }
 
 export async function signSessionToken(payload: SessionPayload): Promise<string> {
+  const secret = getSecret();
+  if (!secret) {
+    throw new Error("JWT_SECRET is not set");
+  }
   return new SignJWT({
     email: payload.email,
     role: payload.role,
@@ -21,14 +25,16 @@ export async function signSessionToken(payload: SessionPayload): Promise<string>
     .setSubject(payload.userId)
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(getSecret());
+    .sign(secret);
 }
 
 export async function verifySessionToken(
   token: string
 ): Promise<SessionPayload | null> {
+  const secret = getSecret();
+  if (!secret) return null;
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, secret);
     const sub = payload.sub;
     if (!sub || typeof payload.email !== "string") return null;
     return {

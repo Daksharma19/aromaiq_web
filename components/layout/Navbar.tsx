@@ -8,7 +8,6 @@ import { ShoppingBag, Menu, X, Sun, Moon } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import { useProfileStore, initialsFromName } from "@/lib/profile-store";
 import { useAuth } from "@/components/auth/auth-context";
-import { useCartSync } from "@/lib/hooks/use-cart-sync";
 import ProfileDrawer from "@/components/layout/ProfileDrawer";
 
 const navLinks = [
@@ -39,7 +38,6 @@ function BrandMark({ onNavigate }: { onNavigate?: () => void }) {
 
 export default function Navbar() {
   const { user, loading, refresh, setUser } = useAuth();
-  const { refresh: refreshCart } = useCartSync();
   const itemsCount = useCartStore((s) =>
     s.items.reduce((sum, i) => sum + i.quantity, 0)
   );
@@ -60,9 +58,8 @@ export default function Navbar() {
         email: user.email,
         phone: user.mobile ?? "",
       });
-      refreshCart();
     }
-  }, [user, setProfile, refreshCart]);
+  }, [user, setProfile]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", themeDark);
@@ -115,6 +112,19 @@ export default function Navbar() {
             </nav>
 
             <div className="relative z-10 flex shrink-0 items-center gap-1 sm:gap-2">
+              <Link
+                href="/cart"
+                className="relative inline-flex items-center justify-center p-2"
+                aria-label="Cart"
+              >
+                <ShoppingBag className="text-ivory" size={20} />
+                {itemsCount > 0 ? (
+                  <span className="absolute -top-0.5 right-0.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-gold px-1 font-body text-[11px] text-obsidian">
+                    {itemsCount}
+                  </span>
+                ) : null}
+              </Link>
+
               {!loading && !user ? (
                 <>
                   <Link
@@ -146,19 +156,6 @@ export default function Navbar() {
                       <Sun className="h-5 w-5" strokeWidth={1.5} />
                     )}
                   </button>
-
-                  <Link
-                    href="/cart"
-                    className="relative inline-flex items-center justify-center p-2"
-                    aria-label="Cart"
-                  >
-                    <ShoppingBag className="text-ivory" size={20} />
-                    {itemsCount > 0 ? (
-                      <span className="absolute -top-0.5 right-0.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-gold px-1 font-body text-[11px] text-obsidian">
-                        {itemsCount}
-                      </span>
-                    ) : null}
-                  </Link>
 
                   <button
                     type="button"
@@ -268,6 +265,13 @@ export default function Navbar() {
                 ) : null}
                 {!user ? (
                   <div className="mt-6 flex flex-col gap-3">
+                    <Link
+                      href="/cart"
+                      className="w-fit font-body text-sm uppercase tracking-wider text-ivory-muted"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Cart{itemsCount > 0 ? ` (${itemsCount})` : ""}
+                    </Link>
                     <Link
                       href="/login"
                       className="w-fit rounded-lg border border-gold/35 px-6 py-3 font-body text-sm text-gold"
