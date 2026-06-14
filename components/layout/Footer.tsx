@@ -83,7 +83,7 @@ export default function Footer() {
         <div className="mt-12 flex items-center justify-between border-t border-gold/20 pt-6 text-xs text-neutral-600 dark:text-ivory-muted">
           <div>© 2025 AromaIQ. Made with intention in India.</div>
           <div className="text-neutral-500 dark:text-ivory/60">
-            Backed by JSW Ventures
+            Backed by Ride
           </div>
         </div>
       </div>
