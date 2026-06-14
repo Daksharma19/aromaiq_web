@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "image": "/images/diffuser.png",
+    "heading": "Four Independent Chambers",
+    "body": "Each module controls a separate essential oil. Mix up to 4 scents simultaneously."
+  },
+  {
+    "id": 2,
+    "image": "/images/diffuser.png",
+    "heading": "ESP32 Precision Control",
+    "body": "MOSFET-driven misting modules with millisecond response time."
+  },
+  {
+    "id": 3,
+    "image": "/images/diffuser.png",
+    "heading": "WiFi + Bluetooth Ready",
+    "body": "Seamless connection to the AromaIQ app. No hub required."
+  },
+  {
+    "id": 4,
+    "image": "/images/diffuser.png",
+    "heading": "Whisper-Quiet Operation",
+    "body": "Below 30dB. You'll smell it before you hear it."
+  }
+]

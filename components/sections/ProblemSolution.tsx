@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { useRef } from "react";
 import {
   motion,
@@ -15,6 +15,11 @@ import {
   slideFromLeft,
   slideFromRight,
 } from "@/lib/motion-variants";
+import problemImage from "@/public/images/diffuser.png";
+import solutionImage from "@/public/images/image1.png";
+
+const PROBLEM_IMAGE_ALT = "AromaIQ smart diffuser";
+const SOLUTION_IMAGE_ALT = "AromaIQ mobile interface";
 
 const painPoints = [
   "15 oils. No idea which to use.",
@@ -34,18 +39,17 @@ const viewAnim = {
   margin: "-60px 0px",
 } as const;
 
-/** `imagePath` is served from `public/` (e.g. `/images/diffuser.png`). */
 function ProblemSolutionImage({
-  imagePath,
+  image,
   imageAlt,
 }: {
-  imagePath: string;
+  image: StaticImageData;
   imageAlt: string;
 }) {
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-gold/15 bg-obsidian-light/40">
       <Image
-        src={imagePath}
+        src={image}
         alt={imageAlt}
         fill
         className="object-cover"
@@ -141,19 +145,7 @@ function SolutionCopy() {
   );
 }
 
-export type ProblemSolutionProps = {
-
-  imagePath?: string;
-  imageAlt?: string;
-};
-
-const DEFAULT_IMAGE_PATH = "/images/diffuser.png";
-const DEFAULT_IMAGE_ALT = "AromaIQ smart diffuser";
-
-export default function ProblemSolution({
-  imagePath = DEFAULT_IMAGE_PATH,
-  imageAlt = DEFAULT_IMAGE_ALT,
-}: ProblemSolutionProps = {}) {
+export default function ProblemSolution() {
   const containerRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -184,8 +176,8 @@ export default function ProblemSolution({
             viewport={viewAnim}
           >
             <ProblemSolutionImage
-              imagePath={imagePath}
-              imageAlt={imageAlt}
+              image={problemImage}
+              imageAlt={PROBLEM_IMAGE_ALT}
             />
           </motion.div>
           <motion.div
@@ -203,8 +195,8 @@ export default function ProblemSolution({
             viewport={viewAnim}
           >
             <ProblemSolutionImage
-              imagePath="/images/image1.png"
-              imageAlt={"Mobile Interface Image"}
+              image={solutionImage}
+              imageAlt={SOLUTION_IMAGE_ALT}
             />
           </motion.div>
           <motion.div
@@ -236,8 +228,8 @@ export default function ProblemSolution({
               transition={{ delay: 0.08 }}
             >
               <ProblemSolutionImage
-                imagePath={"/images/image1.png"}
-                imageAlt={"Diffuser Image"}
+                image={problemImage}
+                imageAlt={PROBLEM_IMAGE_ALT}
               />
             </motion.div>
           </div>
@@ -252,8 +244,8 @@ export default function ProblemSolution({
               viewport={viewAnim}
             >
               <ProblemSolutionImage
-                imagePath={"/images/diffuser.png"}
-                imageAlt={"Mobile Interface Image"}
+                image={solutionImage}
+                imageAlt={SOLUTION_IMAGE_ALT}
               />
             </motion.div>
             <motion.div
